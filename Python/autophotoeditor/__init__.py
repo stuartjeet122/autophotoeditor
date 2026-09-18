@@ -1,0 +1,1 @@
+"""AutoPhotoEditor application package."""

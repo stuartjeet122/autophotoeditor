@@ -1,0 +1,19 @@
+# Python cache and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Build and packaging artifacts
+build/
+dist/
+*.spec
+
+# Generated runtime outputs
+api_outputs/
+
+# Local sample / test assets
+testPictures/
+
+# Model binaries that are downloaded at runtime
+*.pt

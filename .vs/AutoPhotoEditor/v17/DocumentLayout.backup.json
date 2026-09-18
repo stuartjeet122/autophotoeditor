@@ -1,0 +1,249 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\viewmodels\\mainviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:viewmodels\\mainviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\models\\photoeditjob.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:models\\photoeditjob.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\models\\lutitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:models\\lutitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\api\\apimodels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:api\\apimodels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\api\\apijobstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:api\\apijobstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\api\\autophotoeditorapiclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:api\\autophotoeditorapiclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\api\\autophotoeditorapiconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:api\\autophotoeditorapiconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\api\\autophotoeditorapiexception.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:api\\autophotoeditorapiexception.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\api\\apihttphelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:api\\apihttphelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\api\\autoenhanceapiresult.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:api\\autoenhanceapiresult.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 9,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ApiJobStatus.cs",
+              "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\ApiJobStatus.cs",
+              "RelativeDocumentMoniker": "Api\\ApiJobStatus.cs",
+              "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\ApiJobStatus.cs",
+              "RelativeToolTip": "Api\\ApiJobStatus.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-15T19:28:57.621Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "PhotoEditJob.cs",
+              "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Models\\PhotoEditJob.cs",
+              "RelativeDocumentMoniker": "Models\\PhotoEditJob.cs",
+              "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Models\\PhotoEditJob.cs",
+              "RelativeToolTip": "Models\\PhotoEditJob.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAYwEcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-15T19:28:39.611Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "LUTItem.cs",
+              "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Models\\LUTItem.cs",
+              "RelativeDocumentMoniker": "Models\\LUTItem.cs",
+              "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Models\\LUTItem.cs",
+              "RelativeToolTip": "Models\\LUTItem.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-15T19:28:33.611Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ApiModels.cs",
+              "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\ApiModels.cs",
+              "RelativeDocumentMoniker": "Api\\ApiModels.cs",
+              "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\ApiModels.cs",
+              "RelativeToolTip": "Api\\ApiModels.cs",
+              "ViewState": "AgIAAJMAAAAAAAAAAAAkwLgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-15T19:28:20.553Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "MainWindow.xaml",
+              "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\MainWindow.xaml",
+              "RelativeToolTip": "MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-09-15T18:17:45.27Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "App.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\App.xaml.cs",
+              "RelativeDocumentMoniker": "App.xaml.cs",
+              "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\App.xaml.cs",
+              "RelativeToolTip": "App.xaml.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAqwBgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-15T16:55:49.797Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "AutoPhotoEditorApiException.cs",
+              "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\AutoPhotoEditorApiException.cs",
+              "RelativeDocumentMoniker": "Api\\AutoPhotoEditorApiException.cs",
+              "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\AutoPhotoEditorApiException.cs",
+              "RelativeToolTip": "Api\\AutoPhotoEditorApiException.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-15T16:49:39.438Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MainViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\ViewModels\\MainViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\MainViewModel.cs",
+              "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\ViewModels\\MainViewModel.cs",
+              "RelativeToolTip": "ViewModels\\MainViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-15T16:56:16.872Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "MainWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\MainWindow.xaml.cs*",
+              "RelativeToolTip": "MainWindow.xaml.cs*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-15T18:30:49.825Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "AutoPhotoEditorApiClient.cs",
+              "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\AutoPhotoEditorApiClient.cs",
+              "RelativeDocumentMoniker": "Api\\AutoPhotoEditorApiClient.cs",
+              "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\AutoPhotoEditorApiClient.cs",
+              "RelativeToolTip": "Api\\AutoPhotoEditorApiClient.cs",
+              "ViewState": "AgIAAPYBAAAAAAAAAAAswA8CAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-15T16:49:00.644Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "AutoEnhanceApiResult.cs",
+              "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\AutoEnhanceApiResult.cs",
+              "RelativeDocumentMoniker": "Api\\AutoEnhanceApiResult.cs",
+              "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\AutoEnhanceApiResult.cs",
+              "RelativeToolTip": "Api\\AutoEnhanceApiResult.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-15T16:58:23.528Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "AutoPhotoEditorApiConfig.cs",
+              "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\AutoPhotoEditorApiConfig.cs",
+              "RelativeDocumentMoniker": "Api\\AutoPhotoEditorApiConfig.cs",
+              "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\AutoPhotoEditorApiConfig.cs",
+              "RelativeToolTip": "Api\\AutoPhotoEditorApiConfig.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-15T16:40:30.707Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "ApiHttpHelper.cs",
+              "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\ApiHttpHelper.cs",
+              "RelativeDocumentMoniker": "Api\\ApiHttpHelper.cs",
+              "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\ApiHttpHelper.cs",
+              "RelativeToolTip": "Api\\ApiHttpHelper.cs",
+              "ViewState": "AgIAAEMAAAAAAAAAAAA7wG8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-15T16:49:07.955Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "App.xaml",
+              "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\App.xaml",
+              "RelativeDocumentMoniker": "App.xaml",
+              "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\App.xaml",
+              "RelativeToolTip": "App.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-09-15T16:55:34.382Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
