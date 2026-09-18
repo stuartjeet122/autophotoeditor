@@ -24,6 +24,10 @@ public partial class MainViewModel : ObservableObject
 
     private string? _maskJsonForOriginal;
 
+    private string? _analysisJsonForOriginal;
+
+    private string? _activeJobId;
+
     // ================================================================
     // DISPLAY CONFIGURATION
     // ================================================================
@@ -86,6 +90,213 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool isPreviewMode = true;
 
+    [ObservableProperty]
+    private double autoEnhanceStrength = 1.0;
+
+    [ObservableProperty]
+    private double manualExposure;
+
+    [ObservableProperty]
+    private double manualContrast;
+
+    [ObservableProperty]
+    private double manualHighlights;
+
+    [ObservableProperty]
+    private double manualShadows;
+
+    [ObservableProperty]
+    private double manualTemperature;
+
+    [ObservableProperty]
+    private double manualTint;
+
+    [ObservableProperty]
+    private double manualSaturation;
+
+    [ObservableProperty]
+    private double manualSharpness;
+
+    partial void OnManualExposureChanged(double value)
+    {
+        double clamped = ClampManualValue(value, -2.0, 2.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualExposure = clamped;
+    }
+
+    partial void OnManualContrastChanged(double value)
+    {
+        double clamped = ClampManualValue(value, -100.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualContrast = clamped;
+    }
+
+    partial void OnManualHighlightsChanged(double value)
+    {
+        double clamped = ClampManualValue(value, -100.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualHighlights = clamped;
+    }
+
+    partial void OnManualShadowsChanged(double value)
+    {
+        double clamped = ClampManualValue(value, -100.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualShadows = clamped;
+    }
+
+    partial void OnManualTemperatureChanged(double value)
+    {
+        double clamped = ClampManualValue(value, -100.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualTemperature = clamped;
+    }
+
+    partial void OnManualTintChanged(double value)
+    {
+        double clamped = ClampManualValue(value, -100.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualTint = clamped;
+    }
+
+    partial void OnManualSaturationChanged(double value)
+    {
+        double clamped = ClampManualValue(value, -100.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualSaturation = clamped;
+    }
+
+    partial void OnManualSharpnessChanged(double value)
+    {
+        double clamped = ClampManualValue(value, 0.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualSharpness = clamped;
+    }
+
+    private static double ClampManualValue(
+        double value,
+        double minimum,
+        double maximum)
+    {
+        return
+            double.IsFinite(value)
+                ? Math.Clamp(value, minimum, maximum)
+                : minimum <= 0.0 && maximum >= 0.0
+                    ? 0.0
+                    : minimum;
+    }
+
+    [ObservableProperty]
+    private string maskDevice = "auto";
+
+    [ObservableProperty]
+    private double maskedStrength = 1.0;
+
+    [ObservableProperty]
+    private double maskedFeather = 2.0;
+
+    [ObservableProperty]
+    private string selectedMaskNamesText = string.Empty;
+
+    private string? _selectedMaskName;
+
+    public string? SelectedMaskName
+    {
+        get => _selectedMaskName;
+        set
+        {
+            if (SetProperty(ref _selectedMaskName, value) &&
+                !string.IsNullOrWhiteSpace(value))
+            {
+                SelectedMaskNamesText = value;
+            }
+        }
+    }
+
+    private bool _manualAdjustMask;
+
+    public bool ManualAdjustMask
+    {
+        get => _manualAdjustMask;
+        set => SetProperty(ref _manualAdjustMask, value);
+    }
+
+    public bool HasAvailableMasks => AvailableMaskNames.Count > 0;
+
+    [ObservableProperty]
+    private string denoiseDevice = "cpu";
+
+    [ObservableProperty]
+    private string geometryMode = "auto";
+
+    [ObservableProperty]
+    private double geometryRotate;
+
+    [ObservableProperty]
+    private double geometryAspect;
+
+    [ObservableProperty]
+    private double geometryScale = 100.0;
+
+    [ObservableProperty]
+    private double geometryX;
+
+    [ObservableProperty]
+    private double geometryY;
+
+    [ObservableProperty]
+    private bool geometryCrop = true;
+
+    [ObservableProperty]
+    private bool lensManual;
+
+    [ObservableProperty]
+    private double lensK1;
+
+    [ObservableProperty]
+    private double lensK2;
+
+    [ObservableProperty]
+    private double lensK3;
+
+    [ObservableProperty]
+    private double lensP1;
+
+    [ObservableProperty]
+    private double lensP2;
+
+    [ObservableProperty]
+    private double lensStrength = 1.0;
+
+    [ObservableProperty]
+    private double lensCenterX = 0.5;
+
+    [ObservableProperty]
+    private double lensCenterY = 0.5;
+
+    [ObservableProperty]
+    private double lensFocalScale = 1.0;
+
+    [ObservableProperty]
+    private bool lensNoCrop;
+
+    [ObservableProperty]
+    private string lensCameraMaker = string.Empty;
+
+    [ObservableProperty]
+    private string lensCameraModel = string.Empty;
+
+    [ObservableProperty]
+    private string lensMaker = string.Empty;
+
+    [ObservableProperty]
+    private string lensModel = string.Empty;
+
+    [ObservableProperty]
+    private string pipelineStages = "analyze,auto-enhance";
+
+    public ObservableCollection<string> AvailableMaskNames { get; } = new();
+
 
     // ================================================================
     // COMPARISON
@@ -115,6 +326,24 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private int historyIndex = -1;
+
+    public bool CanGoPrevious => HistoryIndex >= 0;
+
+    public bool CanGoNext => HistoryIndex < JobHistory.Count - 1;
+
+    public string HistoryPositionText =>
+        HistoryIndex < 0
+            ? $"Original  •  0 / {JobHistory.Count}"
+            : $"Edit {HistoryIndex + 1} / {JobHistory.Count}";
+
+    partial void OnHistoryIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(CanGoPrevious));
+        OnPropertyChanged(nameof(CanGoNext));
+        OnPropertyChanged(nameof(HistoryPositionText));
+
+        ApplyHistoryControls(value);
+    }
 
 
     // ================================================================
@@ -234,12 +463,24 @@ public partial class MainViewModel : ObservableObject
 
             HistoryIndex = -1;
 
+            OnPropertyChanged(nameof(CanGoPrevious));
+            OnPropertyChanged(nameof(CanGoNext));
+            OnPropertyChanged(nameof(HistoryPositionText));
+
 
             // --------------------------------------------------------
             // RESET MASK DATA
             // --------------------------------------------------------
 
             _maskJsonForOriginal = null;
+
+            _analysisJsonForOriginal = null;
+
+            AvailableMaskNames.Clear();
+
+            SelectedMaskNamesText = string.Empty;
+            SelectedMaskName = null;
+            ManualAdjustMask = false;
 
 
             // --------------------------------------------------------
@@ -313,6 +554,9 @@ public partial class MainViewModel : ObservableObject
             string jobId =
                 Guid.NewGuid().ToString("N");
 
+            _activeJobId =
+                jobId;
+
 
             // --------------------------------------------------------
             // ANALYSIS
@@ -342,7 +586,7 @@ public partial class MainViewModel : ObservableObject
                 await _api.AutoEnhanceAsync(
                     imageBytes,
                     analysisResult.Analysis,
-                    strength: 1.0,
+                    strength: AutoEnhanceStrength,
                     jobId,
                     OnApiProgress,
                     token);
@@ -387,7 +631,12 @@ public partial class MainViewModel : ObservableObject
 
             AddHistory(
                 outputFile,
-                "Auto Enhance");
+                "Auto Enhance",
+                settingsJson: JsonSerializer.Serialize(new
+                {
+                    strength = AutoEnhanceStrength
+                }),
+                analysisJson: analysisResult.AnalysisJson);
 
 
             ComparisonPosition = 50;
@@ -422,17 +671,13 @@ public partial class MainViewModel : ObservableObject
         // ------------------------------------------------------------
         // IMPORTANT:
         //
-        // Preview mode:
-        //     process the CURRENT edited image.
-        //
-        // Original mode:
-        //     process the ORIGINAL image.
+        // Mask data is tied to the pixel geometry of the original image.
+        // Always use that same original image for extraction and enhancement
+        // so the cached masks remain valid and export stays full resolution.
         // ------------------------------------------------------------
 
         string? sourcePath =
-            IsPreviewMode
-                ? GetCurrentImagePath()
-                : OriginalImagePath;
+            OriginalImagePath;
 
 
         if (string.IsNullOrWhiteSpace(sourcePath) ||
@@ -458,20 +703,17 @@ public partial class MainViewModel : ObservableObject
                 _processingCts.Token;
 
 
-            string apiInputPath =
-                await PrepareApiInputAsync(
-                    sourcePath,
-                    token);
-
-
             byte[] imageBytes =
                 await File.ReadAllBytesAsync(
-                    apiInputPath,
+                    sourcePath,
                     token);
 
 
             string jobId =
                 Guid.NewGuid().ToString("N");
+
+            _activeJobId =
+                jobId;
 
 
             // --------------------------------------------------------
@@ -479,17 +721,21 @@ public partial class MainViewModel : ObservableObject
             // --------------------------------------------------------
 
             string? maskJson =
-                !IsPreviewMode
-                    ? _maskJsonForOriginal
-                        ?? JobHistory
-                            .LastOrDefault(
-                                item =>
-                                    item.Operation ==
-                                    PhotoEditOperation.MaskedEnhance &&
-                                    !string.IsNullOrWhiteSpace(
-                                        item.MaskJson))
-                            ?.MaskJson
-                    : null;
+                _maskJsonForOriginal
+                ?? JobHistory
+                    .LastOrDefault(
+                        item =>
+                            item.Operation ==
+                            PhotoEditOperation.MaskedEnhance &&
+                            !string.IsNullOrWhiteSpace(
+                                item.MaskJson))
+                    ?.MaskJson;
+
+            if (!string.IsNullOrWhiteSpace(maskJson))
+            {
+                _maskJsonForOriginal =
+                    maskJson;
+            }
 
 
             if (string.IsNullOrWhiteSpace(maskJson))
@@ -503,7 +749,8 @@ public partial class MainViewModel : ObservableObject
                         imageBytes,
                         jobId,
                         OnApiProgress,
-                        token);
+                        token,
+                        device: MaskDevice);
 
 
                 maskJson =
@@ -520,16 +767,22 @@ public partial class MainViewModel : ObservableObject
                 // Only cache masks when they belong to
                 // the ORIGINAL image.
 
-                if (!IsPreviewMode)
-                {
-                    _maskJsonForOriginal =
-                        maskJson;
-                }
+                _maskJsonForOriginal =
+                    maskJson;
+
+                UpdateAvailableMaskNames(
+                    maskResult.MaskNames);
             }
 
 
             using JsonDocument maskDocument =
                 JsonDocument.Parse(maskJson);
+
+            if (AvailableMaskNames.Count == 0)
+            {
+                UpdateAvailableMaskNames(
+                    GetMaskNames(maskDocument.RootElement));
+            }
 
 
             // --------------------------------------------------------
@@ -544,8 +797,9 @@ public partial class MainViewModel : ObservableObject
                 await _api.MaskedEnhanceAsync(
                     imageBytes,
                     maskDocument.RootElement,
-                    strength: 1.0,
-                    feather: 2.0,
+                    strength: MaskedStrength,
+                    feather: MaskedFeather,
+                    maskNames: ParseSelectedMaskNames(),
                     jobId: jobId,
                     progress: OnApiProgress,
                     cancellationToken: token);
@@ -591,16 +845,25 @@ public partial class MainViewModel : ObservableObject
             AddHistory(
                 outputPath,
                 "Masked Enhance",
-                maskJson);
+                maskJson,
+                settingsJson: JsonSerializer.Serialize(new
+                {
+                    strength = MaskedStrength,
+                    feather = MaskedFeather,
+                    mask_names = ParseSelectedMaskNames() ?? Array.Empty<string>(),
+                    mask_report = result.MaskReport.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null
+                        ? null
+                        : (object)result.MaskReport
+                }),
+                isMaskScoped: true,
+                maskNames: ParseSelectedMaskNames());
 
 
             ComparisonPosition = 50;
 
 
             StatusMessage =
-                IsPreviewMode
-                    ? "Masked enhancement complete."
-                    : "Original photo masked enhancement complete.";
+                "Original photo masked enhancement complete.";
         }
         catch (OperationCanceledException)
         {
@@ -616,6 +879,90 @@ public partial class MainViewModel : ObservableObject
         {
             StopProcessing();
         }
+    }
+
+
+    // ================================================================
+    // MANUAL ADJUSTMENT
+    // ================================================================
+
+    [RelayCommand]
+    private Task ManualAdjustAsync()
+    {
+        IReadOnlyCollection<string>? selectedMasks =
+            ManualAdjustMask
+                ? ParseSelectedMaskNames()
+                : null;
+
+        if (ManualAdjustMask && (selectedMasks == null || selectedMasks.Count == 0))
+        {
+            StatusMessage = "Choose at least one mask before applying a masked adjustment.";
+            return Task.CompletedTask;
+        }
+
+        JsonElement maskJson = default;
+        if (ManualAdjustMask)
+        {
+            string? cachedMaskJson = GetReusableMaskJson();
+            if (string.IsNullOrWhiteSpace(cachedMaskJson))
+            {
+                StatusMessage = "Extract mask data before applying a masked adjustment.";
+                return Task.CompletedTask;
+            }
+
+            using JsonDocument maskDocument = JsonDocument.Parse(cachedMaskJson);
+            maskJson = maskDocument.RootElement.Clone();
+        }
+
+        var settings = new ManualAdjustmentSettings
+        {
+            Exposure = ManualExposure,
+            Contrast = ManualContrast,
+            Highlights = ManualHighlights,
+            Shadows = ManualShadows,
+            Temperature = ManualTemperature,
+            Tint = ManualTint,
+            Saturation = ManualSaturation,
+            Sharpness = ManualSharpness,
+            UseMask = ManualAdjustMask,
+            MaskJson = maskJson,
+            MaskNames = selectedMasks?.ToArray() ?? Array.Empty<string>(),
+            Feather = MaskedFeather
+        };
+
+        string settingsJson = JsonSerializer.Serialize(new
+        {
+            target = ManualAdjustMask ? "mask" : "image",
+            mask_names = selectedMasks?.ToArray() ?? Array.Empty<string>(),
+            feather = MaskedFeather,
+            adjustments = new
+            {
+                exposure = ManualExposure,
+                contrast = ManualContrast,
+                highlights = ManualHighlights,
+                shadows = ManualShadows,
+                temperature = ManualTemperature,
+                tint = ManualTint,
+                saturation = ManualSaturation,
+                sharpness = ManualSharpness
+            }
+        });
+
+        return RunImageOperationAsync(
+            "Applying manual adjustments...",
+            "Manual Adjust",
+            "manual",
+            (imageBytes, jobId, token) =>
+                _api.ManualAdjustAsync(
+                    imageBytes,
+                    settings,
+                    jobId: jobId,
+                    progress: OnApiProgress,
+                    cancellationToken: token),
+            settingsJson: settingsJson,
+            maskJson: ManualAdjustMask ? maskJson.GetRawText() : null,
+            maskNames: selectedMasks,
+            isMaskScoped: ManualAdjustMask);
     }
 
 
@@ -687,6 +1034,9 @@ public partial class MainViewModel : ObservableObject
 
             string jobId =
                 Guid.NewGuid().ToString("N");
+
+            _activeJobId =
+                jobId;
 
 
             StatusMessage =
@@ -765,6 +1115,475 @@ public partial class MainViewModel : ObservableObject
 
 
     // ================================================================
+    // IMAGE ANALYSIS
+    // ================================================================
+
+    [RelayCommand]
+    private async Task AnalyzeImageAsync()
+    {
+        string? sourcePath =
+            GetCurrentImagePath();
+
+        if (string.IsNullOrWhiteSpace(sourcePath) ||
+            !File.Exists(sourcePath))
+        {
+            StatusMessage =
+                "Choose an image first.";
+
+            return;
+        }
+
+        StartProcessing("Analysing image...");
+
+        try
+        {
+            _processingCts =
+                new CancellationTokenSource();
+
+            CancellationToken token =
+                _processingCts.Token;
+
+            string apiInputPath =
+                await PrepareApiInputAsync(
+                    sourcePath,
+                    token);
+
+            byte[] imageBytes =
+                await File.ReadAllBytesAsync(
+                    apiInputPath,
+                    token);
+
+            string jobId =
+                Guid.NewGuid().ToString("N");
+
+            _activeJobId =
+                jobId;
+
+            AutoEnhanceDataResult result =
+                await _api.AutoEnhanceDataAsync(
+                    imageBytes,
+                    jobId,
+                    OnApiProgress,
+                    token);
+
+            _analysisJsonForOriginal =
+                result.AnalysisJson;
+
+            StatusMessage =
+                "Image analysis complete.";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage =
+                "Processing cancelled.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"Image analysis failed: {ex.Message}";
+        }
+        finally
+        {
+            StopProcessing();
+        }
+    }
+
+
+    // ================================================================
+    // MASK DATA
+    // ================================================================
+
+    [RelayCommand]
+    private async Task ExtractMaskDataAsync()
+    {
+        string? sourcePath =
+            OriginalImagePath;
+
+        if (string.IsNullOrWhiteSpace(sourcePath) ||
+            !File.Exists(sourcePath))
+        {
+            StatusMessage =
+                "Choose an image first.";
+
+            return;
+        }
+
+        StartProcessing("Analysing image masks...");
+
+        try
+        {
+            _processingCts =
+                new CancellationTokenSource();
+
+            CancellationToken token =
+                _processingCts.Token;
+
+            byte[] imageBytes =
+                await File.ReadAllBytesAsync(
+                    sourcePath,
+                    token);
+
+            string jobId =
+                Guid.NewGuid().ToString("N");
+
+            _activeJobId =
+                jobId;
+
+            MaskDataResult result =
+                await _api.MaskDataAsync(
+                    imageBytes,
+                    jobId,
+                    OnApiProgress,
+                    token,
+                    device: MaskDevice);
+
+            _maskJsonForOriginal =
+                result.MaskJsonText;
+
+            UpdateAvailableMaskNames(
+                result.MaskNames);
+
+            StatusMessage =
+                AvailableMaskNames.Count == 0
+                    ? "Mask data is ready."
+                    : $"Mask data is ready ({AvailableMaskNames.Count} regions).";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage =
+                "Processing cancelled.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"Mask analysis failed: {ex.Message}";
+        }
+        finally
+        {
+            StopProcessing();
+        }
+    }
+
+
+    // ================================================================
+    // DENOISE
+    // ================================================================
+
+    [RelayCommand]
+    private Task DenoiseAsync()
+    {
+        return RunImageOperationAsync(
+            "Applying AI denoise...",
+            "Denoise",
+            "denoise",
+            (imageBytes, jobId, token) =>
+                _api.DenoiseAsync(
+                    imageBytes,
+                    device: DenoiseDevice,
+                    jobId: jobId,
+                    progress: OnApiProgress,
+                    cancellationToken: token));
+    }
+
+
+    // ================================================================
+    // GEOMETRY CORRECTION
+    // ================================================================
+
+    [RelayCommand]
+    private Task GeometryCorrectionAsync()
+    {
+        return RunImageOperationAsync(
+            "Correcting geometry...",
+            "Geometry Correction",
+            "geometry",
+            (imageBytes, jobId, token) =>
+                _api.GeometryCorrectionAsync(
+                    imageBytes,
+                    mode: GeometryMode,
+                    rotate: GeometryRotate,
+                    aspect: GeometryAspect,
+                    scale: GeometryScale,
+                    x: GeometryX,
+                    y: GeometryY,
+                    crop: GeometryCrop,
+                    jobId: jobId,
+                    progress: OnApiProgress,
+                    cancellationToken: token));
+    }
+
+
+    // ================================================================
+    // LENS CORRECTION
+    // ================================================================
+
+    [RelayCommand]
+    private Task LensCorrectionAsync()
+    {
+        return RunImageOperationAsync(
+            "Correcting lens distortion...",
+            "Lens Correction",
+            "lens",
+            (imageBytes, jobId, token) =>
+                _api.LensCorrectionAsync(
+                    imageBytes,
+                    manual: LensManual,
+                    k1: LensK1,
+                    k2: LensK2,
+                    k3: LensK3,
+                    p1: LensP1,
+                    p2: LensP2,
+                    strength: LensStrength,
+                    centerX: LensCenterX,
+                    centerY: LensCenterY,
+                    focalScale: LensFocalScale,
+                    noCrop: LensNoCrop,
+                    cameraMaker: LensCameraMaker,
+                    cameraModel: LensCameraModel,
+                    lensMaker: LensMaker,
+                    lensModel: LensModel,
+                    jobId: jobId,
+                    progress: OnApiProgress,
+                    cancellationToken: token));
+    }
+
+
+    // ================================================================
+    // PIPELINE
+    // ================================================================
+
+    [RelayCommand]
+    private Task RunPipelineAsync()
+    {
+        return RunImageOperationAsync(
+            "Running pipeline...",
+            "Pipeline",
+            "pipeline",
+            (imageBytes, jobId, token) =>
+                _api.PipelineAsync(
+                    imageBytes,
+                    stages: PipelineStages,
+                    jobId: jobId,
+                    progress: OnApiProgress,
+                    cancellationToken: token));
+    }
+
+
+    // ================================================================
+    // API HEALTH
+    // ================================================================
+
+    [RelayCommand]
+    private async Task CheckApiHealthAsync()
+    {
+        try
+        {
+            StatusMessage =
+                await _api.IsHealthyAsync()
+                    ? "API is connected."
+                    : "API is unavailable.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"API health check failed: {ex.Message}";
+        }
+    }
+
+
+    // ================================================================
+    // SHARED IMAGE OPERATION
+    // ================================================================
+
+    private async Task RunImageOperationAsync(
+        string startMessage,
+        string operation,
+        string fileSuffix,
+        Func<byte[], string, CancellationToken, Task<AutoEnhanceApiResult>> operationCall,
+        string? settingsJson = null,
+        string? analysisJson = null,
+        string? maskJson = null,
+        IReadOnlyCollection<string>? maskNames = null,
+        bool isMaskScoped = false)
+    {
+        string? sourcePath =
+            GetCurrentImagePath();
+
+        if (string.IsNullOrWhiteSpace(sourcePath) ||
+            !File.Exists(sourcePath))
+        {
+            StatusMessage =
+                "Choose an image first.";
+
+            return;
+        }
+
+        StartProcessing(startMessage);
+
+        try
+        {
+            _processingCts =
+                new CancellationTokenSource();
+
+            CancellationToken token =
+                _processingCts.Token;
+
+            string apiInputPath =
+                await PrepareApiInputAsync(
+                    sourcePath,
+                    token);
+
+            byte[] imageBytes =
+                await File.ReadAllBytesAsync(
+                    apiInputPath,
+                    token);
+
+            string jobId =
+                Guid.NewGuid().ToString("N");
+
+            _activeJobId =
+                jobId;
+
+            AutoEnhanceApiResult result =
+                await operationCall(
+                    imageBytes,
+                    jobId,
+                    token);
+
+            token.ThrowIfCancellationRequested();
+
+            string outputDirectory =
+                Path.Combine(
+                    Path.GetTempPath(),
+                    "AutoPhotoEditor",
+                    "Generated");
+
+            Directory.CreateDirectory(
+                outputDirectory);
+
+            string outputPath =
+                Path.Combine(
+                    outputDirectory,
+                    $"{jobId}_{fileSuffix}.png");
+
+            await File.WriteAllBytesAsync(
+                outputPath,
+                result.ImageBytes,
+                token);
+
+            SetEditedImage(outputPath);
+
+            AddHistory(
+                outputPath,
+                operation,
+                maskJson: maskJson,
+                settingsJson: settingsJson,
+                analysisJson: analysisJson,
+                maskNames: maskNames,
+                isMaskScoped: isMaskScoped);
+
+            ComparisonPosition =
+                50;
+
+            StatusMessage =
+                $"{operation} complete.";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage =
+                "Processing cancelled.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"{operation} failed: {ex.Message}";
+        }
+        finally
+        {
+            StopProcessing();
+        }
+    }
+
+
+    private void UpdateAvailableMaskNames(
+        IEnumerable<string> maskNames)
+    {
+        AvailableMaskNames.Clear();
+
+        foreach (string maskName in maskNames)
+        {
+            if (string.IsNullOrWhiteSpace(maskName) ||
+                AvailableMaskNames.Contains(maskName))
+            {
+                continue;
+            }
+
+            AvailableMaskNames.Add(
+                maskName);
+        }
+
+        OnPropertyChanged(nameof(HasAvailableMasks));
+    }
+
+
+    private static IReadOnlyList<string> GetMaskNames(
+        JsonElement maskJson)
+    {
+        var result =
+            new List<string>();
+
+        if (maskJson.ValueKind != JsonValueKind.Object ||
+            !maskJson.TryGetProperty(
+                "masks",
+                out JsonElement masks) ||
+            masks.ValueKind != JsonValueKind.Object)
+        {
+            return result;
+        }
+
+        foreach (JsonProperty mask in masks.EnumerateObject())
+        {
+            result.Add(
+                mask.Name);
+        }
+
+        return result;
+    }
+
+
+    private IReadOnlyCollection<string>? ParseSelectedMaskNames()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedMaskNamesText))
+        {
+            return string.IsNullOrWhiteSpace(SelectedMaskName)
+                ? null
+                : new[] { SelectedMaskName };
+        }
+
+        string[] names =
+            SelectedMaskNamesText
+                .Split(
+                    new[] { ',', ';', '\n', '\r' },
+                    StringSplitOptions.RemoveEmptyEntries |
+                    StringSplitOptions.TrimEntries)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+        return names.Length == 0
+            ? null
+            : names;
+    }
+
+    private string? GetReusableMaskJson()
+    {
+        return _maskJsonForOriginal
+            ?? JobHistory
+                .LastOrDefault(item => !string.IsNullOrWhiteSpace(item.MaskJson))
+                ?.MaskJson;
+    }
+
+
+    // ================================================================
     // SET EDITED IMAGE
     // ================================================================
 
@@ -789,63 +1608,66 @@ public partial class MainViewModel : ObservableObject
     // ================================================================
 
     [RelayCommand]
-    private void CancelProcessing()
+    private async Task CancelProcessingAsync()
     {
-        if (_processingCts == null)
+        if (_processingCts == null &&
+            string.IsNullOrWhiteSpace(_activeJobId))
+        {
             return;
+        }
 
 
         StatusMessage =
             "Cancelling...";
 
+        string? jobId =
+            _activeJobId;
 
-        _processingCts.Cancel();
+        _processingCts?.Cancel();
+
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(jobId))
+            {
+                try
+                {
+                    await _api.CancelJobAsync(
+                        jobId);
+                }
+                catch
+                {
+                    // The local cancellation still stops the active request.
+                }
+            }
+        }
+        finally
+        {
+            StopProcessing();
+        }
     }
 
 
     // ================================================================
-    // UNDO
+    // HISTORY NAVIGATION
     // ================================================================
 
     [RelayCommand]
-    private void Undo()
+    private void PreviousEdit()
     {
-        if (HistoryIndex <= 0)
+        if (HistoryIndex < 0)
         {
-            // No edited history remains.
-            // Restore the visual edited state to the original.
-
-            HistoryIndex = -1;
-
-            EditedImagePath = null;
-            EditedImage = null;
-
-            ComparisonPosition = 50;
-
-            StatusMessage = "Undo.";
-
             return;
         }
 
-
         HistoryIndex--;
-
-
         ApplyHistoryState(
             HistoryIndex);
 
-
-        StatusMessage =
-            "Undo.";
+        StatusMessage = "Showing previous edit.";
     }
 
-
-    // ================================================================
-    // REDO
-    // ================================================================
-
     [RelayCommand]
-    private void Redo()
+    private void NextEdit()
     {
         if (HistoryIndex >= JobHistory.Count - 1)
             return;
@@ -857,9 +1679,7 @@ public partial class MainViewModel : ObservableObject
         ApplyHistoryState(
             HistoryIndex);
 
-
-        StatusMessage =
-            "Redo.";
+        StatusMessage = "Showing next edit.";
     }
 
 
@@ -870,11 +1690,14 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void SaveImage()
     {
-        if (string.IsNullOrWhiteSpace(EditedImagePath) ||
-            !File.Exists(EditedImagePath))
+        string? sourcePath =
+            GetCurrentImagePath();
+
+        if (string.IsNullOrWhiteSpace(sourcePath) ||
+            !File.Exists(sourcePath))
         {
             StatusMessage =
-                "There is no edited image to export.";
+                "There is no image to export.";
 
             return;
         }
@@ -895,20 +1718,89 @@ public partial class MainViewModel : ObservableObject
 
         try
         {
-            File.Copy(
-                EditedImagePath,
-                dialog.FileName,
-                true);
+            PhotoEditJob? currentJob =
+                GetCurrentHistoryJob();
 
+            string? maskJson =
+                currentJob?.Operation ==
+                    PhotoEditOperation.MaskedEnhance
+                    ? currentJob.MaskJson
+                    : _maskJsonForOriginal;
 
-            StatusMessage =
-                "Image exported successfully.";
+            ExportImage(sourcePath, dialog.FileName);
+
+            if (!string.IsNullOrWhiteSpace(maskJson))
+            {
+                string directory =
+                    Path.GetDirectoryName(dialog.FileName)
+                    ?? Environment.CurrentDirectory;
+
+                string maskPath =
+                    Path.Combine(
+                        directory,
+                        Path.GetFileNameWithoutExtension(dialog.FileName) +
+                        ".masks.json");
+
+                File.WriteAllText(
+                    maskPath,
+                    maskJson);
+
+                StatusMessage =
+                    "Image and mask data exported successfully.";
+            }
+            else
+            {
+                StatusMessage =
+                    "Image exported successfully.";
+            }
         }
         catch (Exception ex)
         {
             StatusMessage =
                 $"Export failed: {ex.Message}";
         }
+    }
+
+    private static void ExportImage(
+        string sourcePath,
+        string destinationPath)
+    {
+        using FileStream input =
+            new(
+                sourcePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read);
+
+        BitmapDecoder decoder =
+            BitmapDecoder.Create(
+                input,
+                BitmapCreateOptions.PreservePixelFormat,
+                BitmapCacheOption.OnLoad);
+
+        BitmapSource source = decoder.Frames[0];
+        BitmapEncoder encoder =
+            Path.GetExtension(destinationPath).ToLowerInvariant() switch
+            {
+                ".jpg" or ".jpeg" => new JpegBitmapEncoder
+                {
+                    QualityLevel = 97
+                },
+                ".bmp" => new BmpBitmapEncoder(),
+                ".tif" or ".tiff" => new TiffBitmapEncoder(),
+                _ => new PngBitmapEncoder()
+            };
+
+        encoder.Frames.Add(BitmapFrame.Create(source));
+
+        using FileStream output =
+            new(
+                destinationPath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None);
+
+        encoder.Save(output);
     }
 
 
@@ -945,6 +1837,17 @@ public partial class MainViewModel : ObservableObject
         // ------------------------------------------------------------
 
         return OriginalImagePath;
+    }
+
+    private PhotoEditJob? GetCurrentHistoryJob()
+    {
+        if (HistoryIndex < 0 ||
+            HistoryIndex >= JobHistory.Count)
+        {
+            return null;
+        }
+
+        return JobHistory[HistoryIndex];
     }
 
 
@@ -1251,8 +2154,18 @@ public partial class MainViewModel : ObservableObject
     private void AddHistory(
         string outputPath,
         string operation,
-        string? maskJson = null)
+        string? maskJson = null,
+        string? settingsJson = null,
+        string? analysisJson = null,
+        IReadOnlyCollection<string>? maskNames = null,
+        bool isMaskScoped = false)
     {
+        string sourcePath =
+            GetCurrentImagePath() ?? string.Empty;
+
+        string? parentJobId =
+            GetCurrentHistoryJob()?.JobId;
+
         // ------------------------------------------------------------
         // If we previously undid something, remove the abandoned
         // redo states before adding a new edit.
@@ -1260,29 +2173,95 @@ public partial class MainViewModel : ObservableObject
 
         while (JobHistory.Count - 1 > HistoryIndex)
         {
+            PhotoEditJob abandoned =
+                JobHistory[^1];
+
             JobHistory.RemoveAt(
                 JobHistory.Count - 1);
+
+            DeleteGeneratedFileIfSafe(
+                abandoned.OutputImagePath);
         }
 
+        string jobId =
+            Path.GetFileNameWithoutExtension(outputPath)
+                .Split('_', 2, StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault() ??
+            Guid.NewGuid().ToString("N");
+
+        PhotoEditOperation editOperation =
+            operation switch
+            {
+                "Auto Enhance" => PhotoEditOperation.AutoEnhance,
+                "Masked Enhance" => PhotoEditOperation.MaskedEnhance,
+                "Manual Adjust" => PhotoEditOperation.ManualAdjust,
+                "Denoise" => PhotoEditOperation.Denoise,
+                "Geometry Correction" => PhotoEditOperation.GeometryCorrection,
+                "Lens Correction" => PhotoEditOperation.LensCorrection,
+                "Color Grade" => PhotoEditOperation.ColorGrade,
+                _ => PhotoEditOperation.Other
+            };
 
         JobHistory.Add(
             new PhotoEditJob
             {
+                JobId = jobId,
                 OutputImagePath = outputPath,
-
+                SourceImagePath =
+                    operation == "Masked Enhance"
+                        ? OriginalImagePath ?? string.Empty
+                        : sourcePath,
+                ParentJobId = parentJobId,
                 MaskJson = maskJson,
-
-                Operation =
-                    operation == "Auto Enhance"
-                        ? PhotoEditOperation.AutoEnhance
-                        : operation == "Masked Enhance"
-                            ? PhotoEditOperation.MaskedEnhance
-                            : PhotoEditOperation.ColorGrade
+                SettingsJson = settingsJson,
+                AnalysisJson = analysisJson,
+                MaskNames = maskNames?.ToArray() ?? Array.Empty<string>(),
+                IsMaskScoped = isMaskScoped,
+                Operation = editOperation
             });
-
 
         HistoryIndex =
             JobHistory.Count - 1;
+
+        RefreshHistoryState();
+    }
+
+    private static void DeleteGeneratedFileIfSafe(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            return;
+
+        string generatedDirectory =
+            Path.GetFullPath(
+                Path.Combine(
+                    Path.GetTempPath(),
+                    "AutoPhotoEditor",
+                    "Generated"));
+
+        string fullPath = Path.GetFullPath(path);
+
+        if (!fullPath.StartsWith(
+                generatedDirectory + Path.DirectorySeparatorChar,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        try
+        {
+            File.Delete(fullPath);
+        }
+        catch
+        {
+            // An abandoned state can remain on disk without affecting the timeline.
+        }
+    }
+
+    private void RefreshHistoryState()
+    {
+        OnPropertyChanged(nameof(CanGoPrevious));
+        OnPropertyChanged(nameof(CanGoNext));
+        OnPropertyChanged(nameof(HistoryPositionText));
     }
 
 
@@ -1299,10 +2278,13 @@ public partial class MainViewModel : ObservableObject
 
         if (index < 0)
         {
+            // Explicitly switch back to the original image state.
             EditedImagePath = null;
             EditedImage = null;
 
             ComparisonPosition = 50;
+
+            ResetAdjustmentControls();
 
             return;
         }
@@ -1322,8 +2304,247 @@ public partial class MainViewModel : ObservableObject
 
         SetEditedImage(path);
 
+        ApplyHistoryControls(index);
 
+        // Keep selected history states centered for before/after comparison.
         ComparisonPosition = 50;
+    }
+
+    private void ApplyHistoryControls(int index)
+    {
+        if (index < 0 || index >= JobHistory.Count)
+        {
+            ResetAdjustmentControls();
+            return;
+        }
+
+        PhotoEditJob job = JobHistory[index];
+
+        ResetManualControls();
+
+        if (job.Operation == PhotoEditOperation.AutoEnhance &&
+            TryGetNumber(job.SettingsJson, "strength", out double autoStrength))
+        {
+            AutoEnhanceStrength = Math.Clamp(autoStrength, 0.0, 2.0);
+            ApplyAutoAnalysisSettings(job.AnalysisJson);
+        }
+
+        if (job.Operation == PhotoEditOperation.MaskedEnhance)
+        {
+            if (TryGetNumber(job.SettingsJson, "strength", out double maskedStrength))
+                MaskedStrength = Math.Clamp(maskedStrength, 0.0, 1.0);
+
+            if (TryGetNumber(job.SettingsJson, "feather", out double feather))
+                MaskedFeather = Math.Max(0.0, feather);
+
+            SelectedMaskNamesText = string.Join(", ", job.MaskNames);
+            SelectedMaskName = job.MaskNames.FirstOrDefault();
+            ApplyMaskedReportSettings(job.SettingsJson);
+        }
+
+        if (job.Operation == PhotoEditOperation.ManualAdjust)
+        {
+            ApplyManualSettings(job.SettingsJson);
+            ManualAdjustMask = job.IsMaskScoped;
+            SelectedMaskNamesText = string.Join(", ", job.MaskNames);
+            SelectedMaskName = job.MaskNames.FirstOrDefault();
+        }
+    }
+
+    private void ResetAdjustmentControls()
+    {
+        AutoEnhanceStrength = 1.0;
+        MaskedStrength = 1.0;
+        MaskedFeather = 2.0;
+        ResetManualControls();
+        SelectedMaskNamesText = string.Empty;
+        SelectedMaskName = null;
+    }
+
+    private void ResetManualControls()
+    {
+        ManualExposure = 0.0;
+        ManualContrast = 0.0;
+        ManualHighlights = 0.0;
+        ManualShadows = 0.0;
+        ManualTemperature = 0.0;
+        ManualTint = 0.0;
+        ManualSaturation = 0.0;
+        ManualSharpness = 0.0;
+        ManualAdjustMask = false;
+    }
+
+    private void ApplyAutoAnalysisSettings(string? analysisJson)
+    {
+        if (string.IsNullOrWhiteSpace(analysisJson))
+            return;
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(analysisJson);
+            if (!document.RootElement.TryGetProperty("recommendations", out JsonElement recommendations) ||
+                recommendations.ValueKind != JsonValueKind.Object)
+            {
+                return;
+            }
+
+            ManualExposure = GetNestedNumber(recommendations, "exposure_ev", "value", 0.0);
+            ManualContrast = GetNumber(recommendations, "contrast", 0.0);
+            ManualHighlights = GetNumber(recommendations, "highlights", 0.0);
+            ManualShadows = GetNumber(recommendations, "shadows", 0.0);
+            ManualTemperature = GetNestedNumber(recommendations, "temperature", "value", 0.0);
+            ManualTint = GetNestedNumber(recommendations, "tint", "value", 0.0);
+            ManualSharpness = GetNestedNumber(recommendations, "sharpen", "value", 0.0);
+        }
+        catch (JsonException)
+        {
+        }
+    }
+
+    private void ApplyMaskedReportSettings(string? settingsJson)
+    {
+        if (string.IsNullOrWhiteSpace(settingsJson))
+            return;
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(settingsJson);
+            if (!document.RootElement.TryGetProperty("mask_report", out JsonElement report) ||
+                report.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
+            {
+                return;
+            }
+
+            var corrections = new List<JsonElement>();
+            CollectObjectsWithProperty(report, "corrections", corrections);
+            if (corrections.Count == 0)
+                return;
+
+            ManualExposure = AverageCorrection(corrections, "exposure") / 22.0;
+            ManualHighlights = -AverageCorrection(corrections, "highlight_reduction") / 0.714;
+            ManualShadows = AverageCorrection(corrections, "shadow_lift") / 0.714;
+            ManualContrast = AverageCorrection(corrections, "contrast") * 100.0;
+        }
+        catch (JsonException)
+        {
+        }
+    }
+
+    private static void CollectObjectsWithProperty(
+        JsonElement element,
+        string propertyName,
+        ICollection<JsonElement> results)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            if (element.TryGetProperty(propertyName, out JsonElement property) &&
+                property.ValueKind == JsonValueKind.Object)
+            {
+                results.Add(property);
+            }
+
+            foreach (JsonProperty child in element.EnumerateObject())
+            {
+                CollectObjectsWithProperty(child.Value, propertyName, results);
+            }
+        }
+        else if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (JsonElement child in element.EnumerateArray())
+            {
+                CollectObjectsWithProperty(child, propertyName, results);
+            }
+        }
+    }
+
+    private static double AverageCorrection(
+        IEnumerable<JsonElement> corrections,
+        string propertyName)
+    {
+        double total = 0.0;
+        int count = 0;
+
+        foreach (JsonElement correction in corrections)
+        {
+            if (correction.TryGetProperty(propertyName, out JsonElement property) &&
+                property.ValueKind == JsonValueKind.Number &&
+                property.TryGetDouble(out double value))
+            {
+                total += value;
+                count++;
+            }
+        }
+
+        return count == 0 ? 0.0 : total / count;
+    }
+
+    private void ApplyManualSettings(string? settingsJson)
+    {
+        if (string.IsNullOrWhiteSpace(settingsJson))
+            return;
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(settingsJson);
+            JsonElement root = document.RootElement;
+            JsonElement adjustments = root.TryGetProperty("adjustments", out JsonElement nested)
+                ? nested
+                : root;
+
+            ManualExposure = GetNumber(adjustments, "exposure", ManualExposure);
+            ManualContrast = GetNumber(adjustments, "contrast", ManualContrast);
+            ManualHighlights = GetNumber(adjustments, "highlights", ManualHighlights);
+            ManualShadows = GetNumber(adjustments, "shadows", ManualShadows);
+            ManualTemperature = GetNumber(adjustments, "temperature", ManualTemperature);
+            ManualTint = GetNumber(adjustments, "tint", ManualTint);
+            ManualSaturation = GetNumber(adjustments, "saturation", ManualSaturation);
+            ManualSharpness = GetNumber(adjustments, "sharpness", ManualSharpness);
+        }
+        catch (JsonException)
+        {
+        }
+    }
+
+    private static bool TryGetNumber(string? json, string propertyName, out double value)
+    {
+        value = 0.0;
+        if (string.IsNullOrWhiteSpace(json))
+            return false;
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(json);
+            if (!document.RootElement.TryGetProperty(propertyName, out JsonElement property) ||
+                property.ValueKind != JsonValueKind.Number)
+                return false;
+
+            return property.TryGetDouble(out value);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static double GetNumber(JsonElement element, string propertyName, double fallback)
+    {
+        return element.TryGetProperty(propertyName, out JsonElement property) &&
+               property.ValueKind == JsonValueKind.Number &&
+               property.TryGetDouble(out double value)
+            ? value
+            : fallback;
+    }
+
+    private static double GetNestedNumber(
+        JsonElement element,
+        string objectName,
+        string propertyName,
+        double fallback)
+    {
+        return element.TryGetProperty(objectName, out JsonElement nested) &&
+               nested.ValueKind == JsonValueKind.Object
+            ? GetNumber(nested, propertyName, fallback)
+            : fallback;
     }
 
 
@@ -1353,6 +2574,8 @@ public partial class MainViewModel : ObservableObject
 
 
         _processingCts = null;
+
+        _activeJobId = null;
     }
 
 

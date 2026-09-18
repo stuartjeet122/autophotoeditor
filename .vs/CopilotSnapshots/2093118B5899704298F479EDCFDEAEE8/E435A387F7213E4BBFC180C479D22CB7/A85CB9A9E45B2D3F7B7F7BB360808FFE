@@ -1,0 +1,2303 @@
+﻿using AutoPhotoEditor.Api;
+using AutoPhotoEditor.Models;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
+using System;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+
+namespace AutoPhotoEditor.ViewModels;
+
+public partial class MainViewModel : ObservableObject
+{
+    private readonly AutoPhotoEditorApiClient _api;
+
+    private CancellationTokenSource? _processingCts;
+
+    private string? _maskJsonForOriginal;
+
+    private string? _analysisJsonForOriginal;
+
+    private string? _activeJobId;
+
+    // ================================================================
+    // DISPLAY CONFIGURATION
+    // ================================================================
+
+    private const int DisplayPreviewMaxDimension = 1600;
+
+    public const int PreviewMaxDimension = 1000;
+
+    public const int PreviewJpegQuality = 82;
+
+
+    // ================================================================
+    // ORIGINAL IMAGE
+    // ================================================================
+
+    // IMPORTANT:
+    // These always refer to the untouched image selected by the user.
+
+    [ObservableProperty]
+    private BitmapImage? originalImage;
+
+    [ObservableProperty]
+    private string? originalImagePath;
+
+
+    // ================================================================
+    // CURRENT EDITED IMAGE
+    // ================================================================
+
+    // IMPORTANT:
+    // These always refer to the currently selected edited result.
+
+    [ObservableProperty]
+    private BitmapImage? editedImage;
+
+    [ObservableProperty]
+    private string? editedImagePath;
+
+
+    // ================================================================
+    // LUT
+    // ================================================================
+
+    [ObservableProperty]
+    private LUTItem? selectedLut;
+
+    public ObservableCollection<LUTItem> LUTs { get; } = new();
+
+
+    // ================================================================
+    // UI STATE
+    // ================================================================
+
+    [ObservableProperty]
+    private bool isBusy;
+
+    [ObservableProperty]
+    private string statusMessage = "Ready";
+
+    [ObservableProperty]
+    private bool isPreviewMode = true;
+
+    [ObservableProperty]
+    private double autoEnhanceStrength = 1.0;
+
+    [ObservableProperty]
+    private double manualExposure;
+
+    [ObservableProperty]
+    private double manualContrast;
+
+    [ObservableProperty]
+    private double manualHighlights;
+
+    [ObservableProperty]
+    private double manualShadows;
+
+    [ObservableProperty]
+    private double manualTemperature;
+
+    [ObservableProperty]
+    private double manualTint;
+
+    [ObservableProperty]
+    private double manualSaturation;
+
+    [ObservableProperty]
+    private double manualSharpness;
+
+    partial void OnManualExposureChanged(double value)
+    {
+        double clamped = ClampManualValue(value, -2.0, 2.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualExposure = clamped;
+    }
+
+    partial void OnManualContrastChanged(double value)
+    {
+        double clamped = ClampManualValue(value, -100.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualContrast = clamped;
+    }
+
+    partial void OnManualHighlightsChanged(double value)
+    {
+        double clamped = ClampManualValue(value, -100.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualHighlights = clamped;
+    }
+
+    partial void OnManualShadowsChanged(double value)
+    {
+        double clamped = ClampManualValue(value, -100.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualShadows = clamped;
+    }
+
+    partial void OnManualTemperatureChanged(double value)
+    {
+        double clamped = ClampManualValue(value, -100.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualTemperature = clamped;
+    }
+
+    partial void OnManualTintChanged(double value)
+    {
+        double clamped = ClampManualValue(value, -100.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualTint = clamped;
+    }
+
+    partial void OnManualSaturationChanged(double value)
+    {
+        double clamped = ClampManualValue(value, -100.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualSaturation = clamped;
+    }
+
+    partial void OnManualSharpnessChanged(double value)
+    {
+        double clamped = ClampManualValue(value, 0.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            ManualSharpness = clamped;
+    }
+
+    private static double ClampManualValue(
+        double value,
+        double minimum,
+        double maximum)
+    {
+        return
+            double.IsFinite(value)
+                ? Math.Clamp(value, minimum, maximum)
+                : minimum <= 0.0 && maximum >= 0.0
+                    ? 0.0
+                    : minimum;
+    }
+
+    [ObservableProperty]
+    private string maskDevice = "auto";
+
+    [ObservableProperty]
+    private double maskedStrength = 1.0;
+
+    [ObservableProperty]
+    private double maskedFeather = 2.0;
+
+    [ObservableProperty]
+    private string selectedMaskNamesText = string.Empty;
+
+    [ObservableProperty]
+    private string? selectedMaskName;
+
+    [ObservableProperty]
+    private bool manualAdjustMask;
+
+    public bool HasAvailableMasks => AvailableMaskNames.Count > 0;
+
+    [ObservableProperty]
+    private string denoiseDevice = "cpu";
+
+    [ObservableProperty]
+    private string geometryMode = "auto";
+
+    [ObservableProperty]
+    private double geometryRotate;
+
+    [ObservableProperty]
+    private double geometryAspect;
+
+    [ObservableProperty]
+    private double geometryScale = 100.0;
+
+    [ObservableProperty]
+    private double geometryX;
+
+    [ObservableProperty]
+    private double geometryY;
+
+    [ObservableProperty]
+    private bool geometryCrop = true;
+
+    [ObservableProperty]
+    private bool lensManual;
+
+    [ObservableProperty]
+    private double lensK1;
+
+    [ObservableProperty]
+    private double lensK2;
+
+    [ObservableProperty]
+    private double lensK3;
+
+    [ObservableProperty]
+    private double lensP1;
+
+    [ObservableProperty]
+    private double lensP2;
+
+    [ObservableProperty]
+    private double lensStrength = 1.0;
+
+    [ObservableProperty]
+    private double lensCenterX = 0.5;
+
+    [ObservableProperty]
+    private double lensCenterY = 0.5;
+
+    [ObservableProperty]
+    private double lensFocalScale = 1.0;
+
+    [ObservableProperty]
+    private bool lensNoCrop;
+
+    [ObservableProperty]
+    private string lensCameraMaker = string.Empty;
+
+    [ObservableProperty]
+    private string lensCameraModel = string.Empty;
+
+    [ObservableProperty]
+    private string lensMaker = string.Empty;
+
+    [ObservableProperty]
+    private string lensModel = string.Empty;
+
+    [ObservableProperty]
+    private string pipelineStages = "analyze,auto-enhance";
+
+    public ObservableCollection<string> AvailableMaskNames { get; } = new();
+
+
+    // ================================================================
+    // COMPARISON
+    // ================================================================
+
+    [ObservableProperty]
+    private double comparisonPosition = 50.0;
+
+
+    partial void OnComparisonPositionChanged(double value)
+    {
+        double clamped = Math.Clamp(value, 0.0, 100.0);
+
+        if (Math.Abs(clamped - value) > 0.001)
+        {
+            ComparisonPosition = clamped;
+        }
+    }
+
+
+    // ================================================================
+    // HISTORY
+    // ================================================================
+
+    public ObservableCollection<PhotoEditJob> JobHistory { get; }
+        = new();
+
+    [ObservableProperty]
+    private int historyIndex = -1;
+
+    public bool CanGoPrevious => HistoryIndex >= 0;
+
+    public bool CanGoNext => HistoryIndex < JobHistory.Count - 1;
+
+    public string HistoryPositionText =>
+        HistoryIndex < 0
+            ? $"Original  •  0 / {JobHistory.Count}"
+            : $"Edit {HistoryIndex + 1} / {JobHistory.Count}";
+
+    partial void OnHistoryIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(CanGoPrevious));
+        OnPropertyChanged(nameof(CanGoNext));
+        OnPropertyChanged(nameof(HistoryPositionText));
+
+        ApplyHistoryControls(value);
+    }
+
+
+    // ================================================================
+    // CONSTRUCTOR
+    // ================================================================
+
+    public MainViewModel(AutoPhotoEditorApiClient api)
+    {
+        _api = api;
+
+        LUTs.Add(
+            new LUTItem
+            {
+                Name = "Cinematic Teal",
+                FilePath = "luts/teal_orange.cube"
+            });
+
+        LUTs.Add(
+            new LUTItem
+            {
+                Name = "Vintage Film",
+                FilePath = "luts/vintage.cube"
+            });
+
+        SelectedLut = LUTs.FirstOrDefault();
+    }
+
+
+    // ================================================================
+    // SHOW BEFORE
+    // ================================================================
+
+    [RelayCommand]
+    private void ShowBefore()
+    {
+        if (OriginalImage == null)
+            return;
+
+        ComparisonPosition = 0;
+    }
+
+
+    // ================================================================
+    // SHOW AFTER
+    // ================================================================
+
+    [RelayCommand]
+    private void ShowAfter()
+    {
+        if (EditedImage == null)
+            return;
+
+        ComparisonPosition = 100;
+    }
+
+
+    // ================================================================
+    // RESET COMPARISON
+    // ================================================================
+
+    [RelayCommand]
+    private void ResetComparison()
+    {
+        ComparisonPosition = 50;
+    }
+
+
+    // ================================================================
+    // CHOOSE IMAGE
+    // ================================================================
+
+    [RelayCommand]
+    private void ChooseImage()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Choose an image",
+            Filter =
+                "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.webp;*.tif;*.tiff"
+        };
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+        try
+        {
+            string path = dialog.FileName;
+
+            // --------------------------------------------------------
+            // ALWAYS LOAD THE ORIGINAL FROM THE USER'S FILE.
+            // NEVER USE THE API PREVIEW HERE.
+            // --------------------------------------------------------
+
+            BitmapImage original =
+                LoadDisplayPreviewBitmap(
+                    path,
+                    DisplayPreviewMaxDimension);
+
+            OriginalImage = original;
+
+            OriginalImagePath = path;
+
+
+            // --------------------------------------------------------
+            // RESET EDITED STATE
+            // --------------------------------------------------------
+
+            EditedImage = null;
+            EditedImagePath = null;
+
+
+            // --------------------------------------------------------
+            // RESET HISTORY
+            // --------------------------------------------------------
+
+            JobHistory.Clear();
+
+            HistoryIndex = -1;
+
+            OnPropertyChanged(nameof(CanGoPrevious));
+            OnPropertyChanged(nameof(CanGoNext));
+            OnPropertyChanged(nameof(HistoryPositionText));
+
+
+            // --------------------------------------------------------
+            // RESET MASK DATA
+            // --------------------------------------------------------
+
+            _maskJsonForOriginal = null;
+
+            _analysisJsonForOriginal = null;
+
+            AvailableMaskNames.Clear();
+
+            SelectedMaskNamesText = string.Empty;
+            SelectedMaskName = null;
+            ManualAdjustMask = false;
+
+
+            // --------------------------------------------------------
+            // RESET COMPARISON
+            // --------------------------------------------------------
+
+            ComparisonPosition = 50;
+
+
+            StatusMessage = "Image loaded.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"Unable to load image: {ex.Message}";
+        }
+    }
+
+
+    // ================================================================
+    // AUTO ENHANCE
+    // ================================================================
+
+    [RelayCommand]
+    private async Task AutoEnhanceAsync()
+    {
+        string? sourcePath = GetCurrentImagePath();
+
+        if (string.IsNullOrWhiteSpace(sourcePath))
+        {
+            StatusMessage = "Choose an image first.";
+            return;
+        }
+
+        if (!File.Exists(sourcePath))
+        {
+            StatusMessage =
+                "The selected image no longer exists.";
+            return;
+        }
+
+        StartProcessing("Analysing image...");
+
+        try
+        {
+            _processingCts =
+                new CancellationTokenSource();
+
+            CancellationToken token =
+                _processingCts.Token;
+
+
+            // --------------------------------------------------------
+            // CREATE TEMPORARY API PREVIEW ONLY
+            // --------------------------------------------------------
+
+            string apiInputPath =
+                await PrepareApiInputAsync(
+                    sourcePath,
+                    token);
+
+            token.ThrowIfCancellationRequested();
+
+
+            byte[] imageBytes =
+                await File.ReadAllBytesAsync(
+                    apiInputPath,
+                    token);
+
+
+            string jobId =
+                Guid.NewGuid().ToString("N");
+
+            _activeJobId =
+                jobId;
+
+
+            // --------------------------------------------------------
+            // ANALYSIS
+            // --------------------------------------------------------
+
+            StatusMessage =
+                "Analysing image...";
+
+            var analysisResult =
+                await _api.AutoEnhanceDataAsync(
+                    imageBytes,
+                    jobId,
+                    OnApiProgress,
+                    token);
+
+            token.ThrowIfCancellationRequested();
+
+
+            // --------------------------------------------------------
+            // ENHANCE
+            // --------------------------------------------------------
+
+            StatusMessage =
+                "Enhancing image...";
+
+            var result =
+                await _api.AutoEnhanceAsync(
+                    imageBytes,
+                    analysisResult.Analysis,
+                    strength: AutoEnhanceStrength,
+                    jobId,
+                    OnApiProgress,
+                    token);
+
+            token.ThrowIfCancellationRequested();
+
+
+            // --------------------------------------------------------
+            // SAVE EDITED RESULT
+            // --------------------------------------------------------
+
+            string outputDirectory =
+                Path.Combine(
+                    Path.GetTempPath(),
+                    "AutoPhotoEditor",
+                    "Generated");
+
+            Directory.CreateDirectory(outputDirectory);
+
+
+            string outputFile =
+                Path.Combine(
+                    outputDirectory,
+                    $"{jobId}_auto.png");
+
+
+            await File.WriteAllBytesAsync(
+                outputFile,
+                result.ImageBytes,
+                token);
+
+
+            // --------------------------------------------------------
+            // IMPORTANT:
+            // ONLY EDITED IMAGE IS UPDATED.
+            //
+            // OriginalImage remains untouched.
+            // --------------------------------------------------------
+
+            SetEditedImage(outputFile);
+
+
+            AddHistory(
+                outputFile,
+                "Auto Enhance",
+                analysisJson: analysisResult.AnalysisJson);
+
+
+            ComparisonPosition = 50;
+
+            StatusMessage =
+                "Auto enhancement complete.";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage =
+                "Processing cancelled.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"Auto Enhance failed: {ex.Message}";
+        }
+        finally
+        {
+            StopProcessing();
+        }
+    }
+
+
+    // ================================================================
+    // MASKED AUTO ENHANCE
+    // ================================================================
+
+    [RelayCommand]
+    private async Task MaskedEnhanceAsync()
+    {
+        // ------------------------------------------------------------
+        // IMPORTANT:
+        //
+        // Mask data is tied to the pixel geometry of the original image.
+        // Always use that same original image for extraction and enhancement
+        // so the cached masks remain valid and export stays full resolution.
+        // ------------------------------------------------------------
+
+        string? sourcePath =
+            OriginalImagePath;
+
+
+        if (string.IsNullOrWhiteSpace(sourcePath) ||
+            !File.Exists(sourcePath))
+        {
+            StatusMessage =
+                "Choose an image first.";
+
+            return;
+        }
+
+
+        StartProcessing(
+            "Preparing masked enhancement...");
+
+
+        try
+        {
+            _processingCts =
+                new CancellationTokenSource();
+
+            CancellationToken token =
+                _processingCts.Token;
+
+
+            byte[] imageBytes =
+                await File.ReadAllBytesAsync(
+                    sourcePath,
+                    token);
+
+
+            string jobId =
+                Guid.NewGuid().ToString("N");
+
+            _activeJobId =
+                jobId;
+
+
+            // --------------------------------------------------------
+            // MASK DATA
+            // --------------------------------------------------------
+
+            string? maskJson =
+                _maskJsonForOriginal
+                ?? JobHistory
+                    .LastOrDefault(
+                        item =>
+                            item.Operation ==
+                            PhotoEditOperation.MaskedEnhance &&
+                            !string.IsNullOrWhiteSpace(
+                                item.MaskJson))
+                    ?.MaskJson;
+
+            if (!string.IsNullOrWhiteSpace(maskJson))
+            {
+                _maskJsonForOriginal =
+                    maskJson;
+            }
+
+
+            if (string.IsNullOrWhiteSpace(maskJson))
+            {
+                StatusMessage =
+                    "Analysing image masks...";
+
+
+                MaskDataResult maskResult =
+                    await _api.MaskDataAsync(
+                        imageBytes,
+                        jobId,
+                        OnApiProgress,
+                        token,
+                        device: MaskDevice);
+
+
+                maskJson =
+                    maskResult.MaskJsonText;
+
+
+                if (string.IsNullOrWhiteSpace(maskJson))
+                {
+                    throw new AutoPhotoEditorApiException(
+                        "The API returned no reusable mask data.");
+                }
+
+
+                // Only cache masks when they belong to
+                // the ORIGINAL image.
+
+                _maskJsonForOriginal =
+                    maskJson;
+
+                UpdateAvailableMaskNames(
+                    maskResult.MaskNames);
+            }
+
+
+            using JsonDocument maskDocument =
+                JsonDocument.Parse(maskJson);
+
+            if (AvailableMaskNames.Count == 0)
+            {
+                UpdateAvailableMaskNames(
+                    GetMaskNames(maskDocument.RootElement));
+            }
+
+
+            // --------------------------------------------------------
+            // ENHANCE
+            // --------------------------------------------------------
+
+            StatusMessage =
+                "Enhancing masked regions...";
+
+
+            AutoEnhanceApiResult result =
+                await _api.MaskedEnhanceAsync(
+                    imageBytes,
+                    maskDocument.RootElement,
+                    strength: MaskedStrength,
+                    feather: MaskedFeather,
+                    maskNames: ParseSelectedMaskNames(),
+                    jobId: jobId,
+                    progress: OnApiProgress,
+                    cancellationToken: token);
+
+
+            token.ThrowIfCancellationRequested();
+
+
+            // --------------------------------------------------------
+            // SAVE EDITED RESULT
+            // --------------------------------------------------------
+
+            string outputDirectory =
+                Path.Combine(
+                    Path.GetTempPath(),
+                    "AutoPhotoEditor",
+                    "Generated");
+
+
+            Directory.CreateDirectory(
+                outputDirectory);
+
+
+            string outputPath =
+                Path.Combine(
+                    outputDirectory,
+                    $"{jobId}_masked.png");
+
+
+            await File.WriteAllBytesAsync(
+                outputPath,
+                result.ImageBytes,
+                token);
+
+
+            // --------------------------------------------------------
+            // ONLY UPDATE EDITED IMAGE
+            // --------------------------------------------------------
+
+            SetEditedImage(outputPath);
+
+
+            AddHistory(
+                outputPath,
+                "Masked Enhance",
+                maskJson);
+
+
+            ComparisonPosition = 50;
+
+
+            StatusMessage =
+                "Original photo masked enhancement complete.";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage =
+                "Processing cancelled.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"Masked enhancement failed: {ex.Message}";
+        }
+        finally
+        {
+            StopProcessing();
+        }
+    }
+
+
+    // ================================================================
+    // MANUAL ADJUSTMENT
+    // ================================================================
+
+    [RelayCommand]
+    private Task ManualAdjustAsync()
+    {
+        IReadOnlyCollection<string>? selectedMasks =
+            ManualAdjustMask
+                ? ParseSelectedMaskNames()
+                : null;
+
+        if (ManualAdjustMask && (selectedMasks == null || selectedMasks.Count == 0))
+        {
+            StatusMessage = "Choose at least one mask before applying a masked adjustment.";
+            return Task.CompletedTask;
+        }
+
+        JsonElement maskJson = default;
+        if (ManualAdjustMask)
+        {
+            string? cachedMaskJson = GetReusableMaskJson();
+            if (string.IsNullOrWhiteSpace(cachedMaskJson))
+            {
+                StatusMessage = "Extract mask data before applying a masked adjustment.";
+                return Task.CompletedTask;
+            }
+
+            using JsonDocument maskDocument = JsonDocument.Parse(cachedMaskJson);
+            maskJson = maskDocument.RootElement.Clone();
+        }
+
+        var settings = new ManualAdjustmentSettings
+        {
+            Exposure = ManualExposure,
+            Contrast = ManualContrast,
+            Highlights = ManualHighlights,
+            Shadows = ManualShadows,
+            Temperature = ManualTemperature,
+            Tint = ManualTint,
+            Saturation = ManualSaturation,
+            Sharpness = ManualSharpness,
+            UseMask = ManualAdjustMask,
+            MaskJson = maskJson,
+            MaskNames = selectedMasks ?? Array.Empty<string>(),
+            Feather = MaskedFeather
+        };
+
+        string settingsJson = JsonSerializer.Serialize(new
+        {
+            target = ManualAdjustMask ? "mask" : "image",
+            mask_names = selectedMasks ?? Array.Empty<string>(),
+            feather = MaskedFeather,
+            adjustments = new
+            {
+                exposure = ManualExposure,
+                contrast = ManualContrast,
+                highlights = ManualHighlights,
+                shadows = ManualShadows,
+                temperature = ManualTemperature,
+                tint = ManualTint,
+                saturation = ManualSaturation,
+                sharpness = ManualSharpness
+            }
+        });
+
+        return RunImageOperationAsync(
+            "Applying manual adjustments...",
+            "Manual Adjust",
+            "manual",
+            (imageBytes, jobId, token) =>
+                _api.ManualAdjustAsync(
+                    imageBytes,
+                    settings,
+                    jobId: jobId,
+                    progress: OnApiProgress,
+                    cancellationToken: token),
+            settingsJson: settingsJson,
+            maskJson: ManualAdjustMask ? maskJson.GetRawText() : null,
+            maskNames: selectedMasks,
+            isMaskScoped: ManualAdjustMask);
+    }
+
+
+    // ================================================================
+    // COLOR GRADE
+    // ================================================================
+
+    [RelayCommand]
+    private async Task ColorGradeAsync()
+    {
+        string? sourcePath =
+            GetCurrentImagePath();
+
+
+        if (string.IsNullOrWhiteSpace(sourcePath))
+        {
+            StatusMessage =
+                "Choose an image first.";
+
+            return;
+        }
+
+
+        if (SelectedLut == null)
+        {
+            StatusMessage =
+                "Choose a color grade first.";
+
+            return;
+        }
+
+
+        if (!File.Exists(sourcePath))
+        {
+            StatusMessage =
+                "The selected image no longer exists.";
+
+            return;
+        }
+
+
+        StartProcessing(
+            "Applying color grade...");
+
+
+        try
+        {
+            _processingCts =
+                new CancellationTokenSource();
+
+            CancellationToken token =
+                _processingCts.Token;
+
+
+            string apiInputPath =
+                await PrepareApiInputAsync(
+                    sourcePath,
+                    token);
+
+
+            token.ThrowIfCancellationRequested();
+
+
+            byte[] imageBytes =
+                await File.ReadAllBytesAsync(
+                    apiInputPath,
+                    token);
+
+
+            string jobId =
+                Guid.NewGuid().ToString("N");
+
+            _activeJobId =
+                jobId;
+
+
+            StatusMessage =
+                "Applying color grade...";
+
+
+            var result =
+                await _api.ApplyPresetAsync(
+                    imageBytes,
+                    SelectedLut.FilePath,
+                    jpegQuality: 97,
+                    jobId: jobId,
+                    progress: OnApiProgress,
+                    cancellationToken: token);
+
+
+            token.ThrowIfCancellationRequested();
+
+
+            string outputDirectory =
+                Path.Combine(
+                    Path.GetTempPath(),
+                    "AutoPhotoEditor",
+                    "Generated");
+
+
+            Directory.CreateDirectory(
+                outputDirectory);
+
+
+            string outputPath =
+                Path.Combine(
+                    outputDirectory,
+                    $"{jobId}_lut.png");
+
+
+            await File.WriteAllBytesAsync(
+                outputPath,
+                result.ImageBytes,
+                token);
+
+
+            // --------------------------------------------------------
+            // ONLY EDITED IMAGE CHANGES
+            // --------------------------------------------------------
+
+            SetEditedImage(outputPath);
+
+
+            AddHistory(
+                outputPath,
+                SelectedLut.Name);
+
+
+            ComparisonPosition = 50;
+
+
+            StatusMessage =
+                "Color grade applied.";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage =
+                "Processing cancelled.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"Color grade failed: {ex.Message}";
+        }
+        finally
+        {
+            StopProcessing();
+        }
+    }
+
+
+    // ================================================================
+    // IMAGE ANALYSIS
+    // ================================================================
+
+    [RelayCommand]
+    private async Task AnalyzeImageAsync()
+    {
+        string? sourcePath =
+            GetCurrentImagePath();
+
+        if (string.IsNullOrWhiteSpace(sourcePath) ||
+            !File.Exists(sourcePath))
+        {
+            StatusMessage =
+                "Choose an image first.";
+
+            return;
+        }
+
+        StartProcessing("Analysing image...");
+
+        try
+        {
+            _processingCts =
+                new CancellationTokenSource();
+
+            CancellationToken token =
+                _processingCts.Token;
+
+            string apiInputPath =
+                await PrepareApiInputAsync(
+                    sourcePath,
+                    token);
+
+            byte[] imageBytes =
+                await File.ReadAllBytesAsync(
+                    apiInputPath,
+                    token);
+
+            string jobId =
+                Guid.NewGuid().ToString("N");
+
+            _activeJobId =
+                jobId;
+
+            AutoEnhanceDataResult result =
+                await _api.AutoEnhanceDataAsync(
+                    imageBytes,
+                    jobId,
+                    OnApiProgress,
+                    token);
+
+            _analysisJsonForOriginal =
+                result.AnalysisJson;
+
+            StatusMessage =
+                "Image analysis complete.";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage =
+                "Processing cancelled.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"Image analysis failed: {ex.Message}";
+        }
+        finally
+        {
+            StopProcessing();
+        }
+    }
+
+
+    // ================================================================
+    // MASK DATA
+    // ================================================================
+
+    [RelayCommand]
+    private async Task ExtractMaskDataAsync()
+    {
+        string? sourcePath =
+            OriginalImagePath;
+
+        if (string.IsNullOrWhiteSpace(sourcePath) ||
+            !File.Exists(sourcePath))
+        {
+            StatusMessage =
+                "Choose an image first.";
+
+            return;
+        }
+
+        StartProcessing("Analysing image masks...");
+
+        try
+        {
+            _processingCts =
+                new CancellationTokenSource();
+
+            CancellationToken token =
+                _processingCts.Token;
+
+            byte[] imageBytes =
+                await File.ReadAllBytesAsync(
+                    sourcePath,
+                    token);
+
+            string jobId =
+                Guid.NewGuid().ToString("N");
+
+            _activeJobId =
+                jobId;
+
+            MaskDataResult result =
+                await _api.MaskDataAsync(
+                    imageBytes,
+                    jobId,
+                    OnApiProgress,
+                    token,
+                    device: MaskDevice);
+
+            _maskJsonForOriginal =
+                result.MaskJsonText;
+
+            UpdateAvailableMaskNames(
+                result.MaskNames);
+
+            StatusMessage =
+                AvailableMaskNames.Count == 0
+                    ? "Mask data is ready."
+                    : $"Mask data is ready ({AvailableMaskNames.Count} regions).";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage =
+                "Processing cancelled.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"Mask analysis failed: {ex.Message}";
+        }
+        finally
+        {
+            StopProcessing();
+        }
+    }
+
+
+    // ================================================================
+    // DENOISE
+    // ================================================================
+
+    [RelayCommand]
+    private Task DenoiseAsync()
+    {
+        return RunImageOperationAsync(
+            "Applying AI denoise...",
+            "Denoise",
+            "denoise",
+            (imageBytes, jobId, token) =>
+                _api.DenoiseAsync(
+                    imageBytes,
+                    device: DenoiseDevice,
+                    jobId: jobId,
+                    progress: OnApiProgress,
+                    cancellationToken: token));
+    }
+
+
+    // ================================================================
+    // GEOMETRY CORRECTION
+    // ================================================================
+
+    [RelayCommand]
+    private Task GeometryCorrectionAsync()
+    {
+        return RunImageOperationAsync(
+            "Correcting geometry...",
+            "Geometry Correction",
+            "geometry",
+            (imageBytes, jobId, token) =>
+                _api.GeometryCorrectionAsync(
+                    imageBytes,
+                    mode: GeometryMode,
+                    rotate: GeometryRotate,
+                    aspect: GeometryAspect,
+                    scale: GeometryScale,
+                    x: GeometryX,
+                    y: GeometryY,
+                    crop: GeometryCrop,
+                    jobId: jobId,
+                    progress: OnApiProgress,
+                    cancellationToken: token));
+    }
+
+
+    // ================================================================
+    // LENS CORRECTION
+    // ================================================================
+
+    [RelayCommand]
+    private Task LensCorrectionAsync()
+    {
+        return RunImageOperationAsync(
+            "Correcting lens distortion...",
+            "Lens Correction",
+            "lens",
+            (imageBytes, jobId, token) =>
+                _api.LensCorrectionAsync(
+                    imageBytes,
+                    manual: LensManual,
+                    k1: LensK1,
+                    k2: LensK2,
+                    k3: LensK3,
+                    p1: LensP1,
+                    p2: LensP2,
+                    strength: LensStrength,
+                    centerX: LensCenterX,
+                    centerY: LensCenterY,
+                    focalScale: LensFocalScale,
+                    noCrop: LensNoCrop,
+                    cameraMaker: LensCameraMaker,
+                    cameraModel: LensCameraModel,
+                    lensMaker: LensMaker,
+                    lensModel: LensModel,
+                    jobId: jobId,
+                    progress: OnApiProgress,
+                    cancellationToken: token));
+    }
+
+
+    // ================================================================
+    // PIPELINE
+    // ================================================================
+
+    [RelayCommand]
+    private Task RunPipelineAsync()
+    {
+        return RunImageOperationAsync(
+            "Running pipeline...",
+            "Pipeline",
+            "pipeline",
+            (imageBytes, jobId, token) =>
+                _api.PipelineAsync(
+                    imageBytes,
+                    stages: PipelineStages,
+                    jobId: jobId,
+                    progress: OnApiProgress,
+                    cancellationToken: token));
+    }
+
+
+    // ================================================================
+    // API HEALTH
+    // ================================================================
+
+    [RelayCommand]
+    private async Task CheckApiHealthAsync()
+    {
+        try
+        {
+            StatusMessage =
+                await _api.IsHealthyAsync()
+                    ? "API is connected."
+                    : "API is unavailable.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"API health check failed: {ex.Message}";
+        }
+    }
+
+
+    // ================================================================
+    // SHARED IMAGE OPERATION
+    // ================================================================
+
+    private async Task RunImageOperationAsync(
+        string startMessage,
+        string operation,
+        string fileSuffix,
+        Func<byte[], string, CancellationToken, Task<AutoEnhanceApiResult>> operationCall,
+        string? settingsJson = null,
+        string? analysisJson = null)
+    {
+        string? sourcePath =
+            GetCurrentImagePath();
+
+        if (string.IsNullOrWhiteSpace(sourcePath) ||
+            !File.Exists(sourcePath))
+        {
+            StatusMessage =
+                "Choose an image first.";
+
+            return;
+        }
+
+        StartProcessing(startMessage);
+
+        try
+        {
+            _processingCts =
+                new CancellationTokenSource();
+
+            CancellationToken token =
+                _processingCts.Token;
+
+            string apiInputPath =
+                await PrepareApiInputAsync(
+                    sourcePath,
+                    token);
+
+            byte[] imageBytes =
+                await File.ReadAllBytesAsync(
+                    apiInputPath,
+                    token);
+
+            string jobId =
+                Guid.NewGuid().ToString("N");
+
+            _activeJobId =
+                jobId;
+
+            AutoEnhanceApiResult result =
+                await operationCall(
+                    imageBytes,
+                    jobId,
+                    token);
+
+            token.ThrowIfCancellationRequested();
+
+            string outputDirectory =
+                Path.Combine(
+                    Path.GetTempPath(),
+                    "AutoPhotoEditor",
+                    "Generated");
+
+            Directory.CreateDirectory(
+                outputDirectory);
+
+            string outputPath =
+                Path.Combine(
+                    outputDirectory,
+                    $"{jobId}_{fileSuffix}.png");
+
+            await File.WriteAllBytesAsync(
+                outputPath,
+                result.ImageBytes,
+                token);
+
+            SetEditedImage(outputPath);
+
+            AddHistory(
+                outputPath,
+                operation,
+                settingsJson: settingsJson,
+                analysisJson: analysisJson);
+
+            ComparisonPosition =
+                50;
+
+            StatusMessage =
+                $"{operation} complete.";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage =
+                "Processing cancelled.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"{operation} failed: {ex.Message}";
+        }
+        finally
+        {
+            StopProcessing();
+        }
+    }
+
+
+    private void UpdateAvailableMaskNames(
+        IEnumerable<string> maskNames)
+    {
+        AvailableMaskNames.Clear();
+
+        foreach (string maskName in maskNames)
+        {
+            if (string.IsNullOrWhiteSpace(maskName) ||
+                AvailableMaskNames.Contains(maskName))
+            {
+                continue;
+            }
+
+            AvailableMaskNames.Add(
+                maskName);
+        }
+    }
+
+
+    private static IReadOnlyList<string> GetMaskNames(
+        JsonElement maskJson)
+    {
+        var result =
+            new List<string>();
+
+        if (maskJson.ValueKind != JsonValueKind.Object ||
+            !maskJson.TryGetProperty(
+                "masks",
+                out JsonElement masks) ||
+            masks.ValueKind != JsonValueKind.Object)
+        {
+            return result;
+        }
+
+        foreach (JsonProperty mask in masks.EnumerateObject())
+        {
+            result.Add(
+                mask.Name);
+        }
+
+        return result;
+    }
+
+
+    private IReadOnlyCollection<string>? ParseSelectedMaskNames()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedMaskNamesText))
+            return null;
+
+        string[] names =
+            SelectedMaskNamesText
+                .Split(
+                    new[] { ',', ';', '\n', '\r' },
+                    StringSplitOptions.RemoveEmptyEntries |
+                    StringSplitOptions.TrimEntries)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+        return names.Length == 0
+            ? null
+            : names;
+    }
+
+
+    // ================================================================
+    // SET EDITED IMAGE
+    // ================================================================
+
+    private void SetEditedImage(string path)
+    {
+        if (!File.Exists(path))
+            return;
+
+
+        EditedImagePath = path;
+
+
+        EditedImage =
+            LoadDisplayPreviewBitmap(
+                path,
+                DisplayPreviewMaxDimension);
+    }
+
+
+    // ================================================================
+    // CANCEL
+    // ================================================================
+
+    [RelayCommand]
+    private async Task CancelProcessingAsync()
+    {
+        if (_processingCts == null &&
+            string.IsNullOrWhiteSpace(_activeJobId))
+        {
+            return;
+        }
+
+
+        StatusMessage =
+            "Cancelling...";
+
+        string? jobId =
+            _activeJobId;
+
+        _processingCts?.Cancel();
+
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(jobId))
+            {
+                try
+                {
+                    await _api.CancelJobAsync(
+                        jobId);
+                }
+                catch
+                {
+                    // The local cancellation still stops the active request.
+                }
+            }
+        }
+        finally
+        {
+            StopProcessing();
+        }
+    }
+
+
+    // ================================================================
+    // HISTORY NAVIGATION
+    // ================================================================
+
+    [RelayCommand]
+    private void PreviousEdit()
+    {
+        if (HistoryIndex < 0)
+        {
+            return;
+        }
+
+        HistoryIndex--;
+        ApplyHistoryState(
+            HistoryIndex);
+
+        StatusMessage = "Showing previous edit.";
+    }
+
+    [RelayCommand]
+    private void NextEdit()
+    {
+        if (HistoryIndex >= JobHistory.Count - 1)
+            return;
+
+
+        HistoryIndex++;
+
+
+        ApplyHistoryState(
+            HistoryIndex);
+
+        StatusMessage = "Showing next edit.";
+    }
+
+
+    // ================================================================
+    // SAVE IMAGE
+    // ================================================================
+
+    [RelayCommand]
+    private void SaveImage()
+    {
+        string? sourcePath =
+            GetCurrentImagePath();
+
+        if (string.IsNullOrWhiteSpace(sourcePath) ||
+            !File.Exists(sourcePath))
+        {
+            StatusMessage =
+                "There is no image to export.";
+
+            return;
+        }
+
+
+        var dialog = new SaveFileDialog
+        {
+            Title = "Export image",
+            Filter =
+                "JPEG Image|*.jpg;*.jpeg|PNG Image|*.png",
+            FileName = "edited-image.jpg"
+        };
+
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+
+        try
+        {
+            PhotoEditJob? currentJob =
+                GetCurrentHistoryJob();
+
+            string? maskJson =
+                currentJob?.Operation ==
+                    PhotoEditOperation.MaskedEnhance
+                    ? currentJob.MaskJson
+                    : _maskJsonForOriginal;
+
+            ExportImage(sourcePath, dialog.FileName);
+
+            if (!string.IsNullOrWhiteSpace(maskJson))
+            {
+                string directory =
+                    Path.GetDirectoryName(dialog.FileName)
+                    ?? Environment.CurrentDirectory;
+
+                string maskPath =
+                    Path.Combine(
+                        directory,
+                        Path.GetFileNameWithoutExtension(dialog.FileName) +
+                        ".masks.json");
+
+                File.WriteAllText(
+                    maskPath,
+                    maskJson);
+
+                StatusMessage =
+                    "Image and mask data exported successfully.";
+            }
+            else
+            {
+                StatusMessage =
+                    "Image exported successfully.";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"Export failed: {ex.Message}";
+        }
+    }
+
+    private static void ExportImage(
+        string sourcePath,
+        string destinationPath)
+    {
+        using FileStream input =
+            new(
+                sourcePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read);
+
+        BitmapDecoder decoder =
+            BitmapDecoder.Create(
+                input,
+                BitmapCreateOptions.PreservePixelFormat,
+                BitmapCacheOption.OnLoad);
+
+        BitmapSource source = decoder.Frames[0];
+        BitmapEncoder encoder =
+            Path.GetExtension(destinationPath).ToLowerInvariant() switch
+            {
+                ".jpg" or ".jpeg" => new JpegBitmapEncoder
+                {
+                    QualityLevel = 97
+                },
+                ".bmp" => new BmpBitmapEncoder(),
+                ".tif" or ".tiff" => new TiffBitmapEncoder(),
+                _ => new PngBitmapEncoder()
+            };
+
+        encoder.Frames.Add(BitmapFrame.Create(source));
+
+        using FileStream output =
+            new(
+                destinationPath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None);
+
+        encoder.Save(output);
+    }
+
+
+    // ================================================================
+    // CURRENT IMAGE PATH
+    // ================================================================
+
+    private string? GetCurrentImagePath()
+    {
+        // ------------------------------------------------------------
+        // If there is an active history state, use that edited file.
+        // ------------------------------------------------------------
+
+        if (HistoryIndex >= 0 &&
+            HistoryIndex < JobHistory.Count)
+        {
+            string? historyPath =
+                JobHistory[HistoryIndex].OutputImagePath;
+
+
+            if (!string.IsNullOrWhiteSpace(historyPath) &&
+                File.Exists(historyPath))
+            {
+                return historyPath;
+            }
+        }
+
+
+        // ------------------------------------------------------------
+        // Otherwise use the original.
+        //
+        // IMPORTANT:
+        // This is NEVER the preview temp file.
+        // ------------------------------------------------------------
+
+        return OriginalImagePath;
+    }
+
+    private PhotoEditJob? GetCurrentHistoryJob()
+    {
+        if (HistoryIndex < 0 ||
+            HistoryIndex >= JobHistory.Count)
+        {
+            return null;
+        }
+
+        return JobHistory[HistoryIndex];
+    }
+
+
+    // ================================================================
+    // PREPARE API INPUT
+    // ================================================================
+
+    private async Task<string> PrepareApiInputAsync(
+        string sourcePath,
+        CancellationToken token)
+    {
+        // ------------------------------------------------------------
+        // FULL ORIGINAL MODE
+        //
+        // Send original file directly.
+        // ------------------------------------------------------------
+
+        if (!IsPreviewMode)
+            return sourcePath;
+
+
+        int maxDimension =
+            Math.Clamp(
+                PreviewMaxDimension,
+                320,
+                8000);
+
+
+        int quality =
+            Math.Clamp(
+                PreviewJpegQuality,
+                1,
+                100);
+
+
+        string tempDirectory =
+            Path.Combine(
+                Path.GetTempPath(),
+                "AutoPhotoEditor",
+                "PreviewApi");
+
+
+        Directory.CreateDirectory(
+            tempDirectory);
+
+
+        string tempPath =
+            Path.Combine(
+                tempDirectory,
+                $"{Guid.NewGuid():N}.jpg");
+
+
+        await Task.Run(
+            () =>
+            {
+                token.ThrowIfCancellationRequested();
+
+
+                using FileStream stream =
+                    new(
+                        sourcePath,
+                        FileMode.Open,
+                        FileAccess.Read,
+                        FileShare.Read);
+
+
+                BitmapDecoder decoder =
+                    BitmapDecoder.Create(
+                        stream,
+                        BitmapCreateOptions.PreservePixelFormat,
+                        BitmapCacheOption.OnLoad);
+
+
+                BitmapSource source =
+                    decoder.Frames[0];
+
+
+                int width =
+                    source.PixelWidth;
+
+                int height =
+                    source.PixelHeight;
+
+
+                double scale =
+                    Math.Min(
+                        1.0,
+                        Math.Min(
+                            (double)maxDimension / width,
+                            (double)maxDimension / height));
+
+
+                BitmapSource bitmap =
+                    source;
+
+
+                if (scale < 1.0)
+                {
+                    var transformed =
+                        new TransformedBitmap(
+                            source,
+                            new ScaleTransform(
+                                scale,
+                                scale));
+
+
+                    transformed.Freeze();
+
+
+                    bitmap =
+                        transformed;
+                }
+
+
+                var encoder =
+                    new JpegBitmapEncoder
+                    {
+                        QualityLevel = quality
+                    };
+
+
+                encoder.Frames.Add(
+                    BitmapFrame.Create(bitmap));
+
+
+                using FileStream output =
+                    new(
+                        tempPath,
+                        FileMode.Create,
+                        FileAccess.Write,
+                        FileShare.None);
+
+
+                encoder.Save(output);
+            },
+            token);
+
+
+        return tempPath;
+    }
+
+
+    // ================================================================
+    // DISPLAY PREVIEW LOADER
+    // ================================================================
+
+    private static BitmapImage LoadDisplayPreviewBitmap(
+        string path,
+        int maxDimension)
+    {
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException(
+                "Image file was not found.",
+                path);
+        }
+
+
+        maxDimension =
+            Math.Clamp(
+                maxDimension,
+                320,
+                4000);
+
+
+        using FileStream stream =
+            new(
+                path,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read);
+
+
+        BitmapDecoder decoder =
+            BitmapDecoder.Create(
+                stream,
+                BitmapCreateOptions.PreservePixelFormat,
+                BitmapCacheOption.OnLoad);
+
+
+        BitmapFrame frame =
+            decoder.Frames[0];
+
+
+        int sourceWidth =
+            frame.PixelWidth;
+
+
+        int sourceHeight =
+            frame.PixelHeight;
+
+
+        double scale =
+            Math.Min(
+                1.0,
+                Math.Min(
+                    (double)maxDimension / sourceWidth,
+                    (double)maxDimension / sourceHeight));
+
+
+        BitmapSource source =
+            frame;
+
+
+        if (scale < 1.0)
+        {
+            int targetWidth =
+                Math.Max(
+                    1,
+                    (int)Math.Round(
+                        sourceWidth * scale));
+
+
+            int targetHeight =
+                Math.Max(
+                    1,
+                    (int)Math.Round(
+                        sourceHeight * scale));
+
+
+            var resized =
+                new TransformedBitmap(
+                    frame,
+                    new ScaleTransform(
+                        (double)targetWidth / sourceWidth,
+                        (double)targetHeight / sourceHeight));
+
+
+            resized.Freeze();
+
+
+            source =
+                resized;
+        }
+
+
+        byte[] png =
+            EncodePreviewToPng(source);
+
+
+        using var memory =
+            new MemoryStream(png);
+
+
+        var bitmap =
+            new BitmapImage();
+
+
+        bitmap.BeginInit();
+
+
+        bitmap.CacheOption =
+            BitmapCacheOption.OnLoad;
+
+
+        bitmap.CreateOptions =
+            BitmapCreateOptions.PreservePixelFormat;
+
+
+        bitmap.StreamSource =
+            memory;
+
+
+        bitmap.EndInit();
+
+
+        bitmap.Freeze();
+
+
+        return bitmap;
+    }
+
+
+    // ================================================================
+    // PNG ENCODER
+    // ================================================================
+
+    private static byte[] EncodePreviewToPng(
+        BitmapSource source)
+    {
+        var encoder =
+            new PngBitmapEncoder();
+
+
+        encoder.Frames.Add(
+            BitmapFrame.Create(source));
+
+
+        using var stream =
+            new MemoryStream();
+
+
+        encoder.Save(stream);
+
+
+        return stream.ToArray();
+    }
+
+
+    // ================================================================
+    // HISTORY
+    // ================================================================
+
+    private void AddHistory(
+        string outputPath,
+        string operation,
+        string? maskJson = null,
+        string? settingsJson = null,
+        string? analysisJson = null)
+    {
+        string sourcePath =
+            GetCurrentImagePath() ?? string.Empty;
+
+        string? parentJobId =
+            GetCurrentHistoryJob()?.JobId;
+
+        // ------------------------------------------------------------
+        // If we previously undid something, remove the abandoned
+        // redo states before adding a new edit.
+        // ------------------------------------------------------------
+
+        while (JobHistory.Count - 1 > HistoryIndex)
+        {
+            PhotoEditJob abandoned =
+                JobHistory[^1];
+
+            JobHistory.RemoveAt(
+                JobHistory.Count - 1);
+
+            DeleteGeneratedFileIfSafe(
+                abandoned.OutputImagePath);
+        }
+
+        string jobId =
+            Path.GetFileNameWithoutExtension(outputPath)
+                .Split('_', 2, StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault() ??
+            Guid.NewGuid().ToString("N");
+
+        PhotoEditOperation editOperation =
+            operation switch
+            {
+                "Auto Enhance" => PhotoEditOperation.AutoEnhance,
+                "Masked Enhance" => PhotoEditOperation.MaskedEnhance,
+                "Manual Adjust" => PhotoEditOperation.ManualAdjust,
+                "Denoise" => PhotoEditOperation.Denoise,
+                "Geometry Correction" => PhotoEditOperation.GeometryCorrection,
+                "Lens Correction" => PhotoEditOperation.LensCorrection,
+                "Color Grade" => PhotoEditOperation.ColorGrade,
+                _ => PhotoEditOperation.Other
+            };
+
+        JobHistory.Add(
+            new PhotoEditJob
+            {
+                JobId = jobId,
+                OutputImagePath = outputPath,
+                SourceImagePath =
+                    operation == "Masked Enhance"
+                        ? OriginalImagePath ?? string.Empty
+                        : sourcePath,
+                ParentJobId = parentJobId,
+                MaskJson = maskJson,
+                SettingsJson = settingsJson,
+                AnalysisJson = analysisJson,
+                Operation = editOperation
+            });
+
+        HistoryIndex =
+            JobHistory.Count - 1;
+
+        RefreshHistoryState();
+    }
+
+    private static void DeleteGeneratedFileIfSafe(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            return;
+
+        string generatedDirectory =
+            Path.GetFullPath(
+                Path.Combine(
+                    Path.GetTempPath(),
+                    "AutoPhotoEditor",
+                    "Generated"));
+
+        string fullPath = Path.GetFullPath(path);
+
+        if (!fullPath.StartsWith(
+                generatedDirectory + Path.DirectorySeparatorChar,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        try
+        {
+            File.Delete(fullPath);
+        }
+        catch
+        {
+            // An abandoned state can remain on disk without affecting the timeline.
+        }
+    }
+
+    private void RefreshHistoryState()
+    {
+        OnPropertyChanged(nameof(CanGoPrevious));
+        OnPropertyChanged(nameof(CanGoNext));
+        OnPropertyChanged(nameof(HistoryPositionText));
+    }
+
+
+    // ================================================================
+    // APPLY HISTORY
+    // ================================================================
+
+    private void ApplyHistoryState(int index)
+    {
+        // ------------------------------------------------------------
+        // IMPORTANT:
+        // index < 0 means "original image".
+        // ------------------------------------------------------------
+
+        if (index < 0)
+        {
+            // Explicitly switch back to the original image state.
+            EditedImagePath = null;
+            EditedImage = null;
+
+            ComparisonPosition = 50;
+
+            return;
+        }
+
+
+        if (index >= JobHistory.Count)
+            return;
+
+
+        string path =
+            JobHistory[index].OutputImagePath;
+
+
+        if (!File.Exists(path))
+            return;
+
+
+        SetEditedImage(path);
+
+        // Keep selected history states centered for before/after comparison.
+        ComparisonPosition = 50;
+    }
+
+
+    // ================================================================
+    // PROCESSING START
+    // ================================================================
+
+    private void StartProcessing(
+        string message)
+    {
+        IsBusy = true;
+
+        StatusMessage = message;
+    }
+
+
+    // ================================================================
+    // PROCESSING STOP
+    // ================================================================
+
+    private void StopProcessing()
+    {
+        IsBusy = false;
+
+
+        _processingCts?.Dispose();
+
+
+        _processingCts = null;
+
+        _activeJobId = null;
+    }
+
+
+    // ================================================================
+    // API PROGRESS
+    // ================================================================
+
+    private void OnApiProgress(
+        ApiJobEvent jobEvent)
+    {
+        Application.Current.Dispatcher.Invoke(
+            () =>
+            {
+                if (!string.IsNullOrWhiteSpace(
+                        jobEvent.Message))
+                {
+                    StatusMessage =
+                        jobEvent.Message;
+                }
+            });
+    }
+}

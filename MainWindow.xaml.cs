@@ -12,8 +12,6 @@ namespace AutoPhotoEditor
 {
     public partial class MainWindow : FluentWindow
     {
-        private bool _comparisonDragging;
-
         private MainViewModel? ViewModel =>
             DataContext as MainViewModel;
 
@@ -48,18 +46,74 @@ namespace AutoPhotoEditor
             SizeChanged +=
                 MainWindow_SizeChanged;
 
+            StateChanged +=
+                MainWindow_StateChanged;
 
-            PhotoComparisonArea.MouseLeftButtonDown +=
-                PhotoComparisonArea_MouseLeftButtonDown;
+            UpdateWindowStateVisual();
+        }
 
-            PhotoComparisonArea.MouseMove +=
-                PhotoComparisonArea_MouseMove;
+        private void TitleBar_MouseLeftButtonDown(
+            object sender,
+            MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton != MouseButton.Left)
+                return;
 
-            PhotoComparisonArea.MouseLeftButtonUp +=
-                PhotoComparisonArea_MouseLeftButtonUp;
+            if (e.ClickCount == 2)
+            {
+                ToggleWindowState();
+                return;
+            }
 
-            PhotoComparisonArea.MouseLeave +=
-                PhotoComparisonArea_MouseLeave;
+            if (WindowState == WindowState.Maximized)
+                return;
+
+            try
+            {
+                DragMove();
+            }
+            catch (InvalidOperationException)
+            {
+            }
+        }
+
+        private void MinimizeButton_Click(
+            object sender,
+            RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void MaximizeButton_Click(
+            object sender,
+            RoutedEventArgs e)
+        {
+            ToggleWindowState();
+        }
+
+        private void CloseButton_Click(
+            object sender,
+            RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void ToggleWindowState()
+        {
+            WindowState = WindowState == WindowState.Maximized
+                ? WindowState.Normal
+                : WindowState.Maximized;
+        }
+
+        private void MainWindow_StateChanged(
+            object? sender,
+            EventArgs e)
+        {
+            UpdateWindowStateVisual();
+        }
+
+        private void UpdateWindowStateVisual()
+        {
         }
 
 
@@ -74,7 +128,8 @@ namespace AutoPhotoEditor
             if (e.PropertyName != nameof(MainViewModel.OriginalImage) &&
                 e.PropertyName != nameof(MainViewModel.EditedImage) &&
                 e.PropertyName != nameof(MainViewModel.EditedImagePath) &&
-                e.PropertyName != nameof(MainViewModel.ComparisonPosition))
+                e.PropertyName != nameof(MainViewModel.ComparisonPosition) &&
+                e.PropertyName != nameof(MainViewModel.HistoryIndex))
             {
                 return;
             }
@@ -116,8 +171,6 @@ namespace AutoPhotoEditor
             object sender,
             RoutedEventArgs e)
         {
-            StopComparisonDragging();
-
             if (ViewModel != null)
             {
                 ViewModel.PropertyChanged -=
@@ -142,243 +195,6 @@ namespace AutoPhotoEditor
                         UpdateImageHost();
                         UpdateComparisonVisual();
                     }));
-        }
-
-
-        // =============================================================
-        // SLIDER CHANGED
-        // =============================================================
-
-        private void ComparisonSlider_ValueChanged(
-            object sender,
-            RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (ViewModel == null)
-                return;
-
-
-            double value =
-                Math.Clamp(
-                    e.NewValue,
-                    0.0,
-                    100.0);
-
-
-            if (Math.Abs(
-                    ViewModel.ComparisonPosition - value) > 0.001)
-            {
-                ViewModel.ComparisonPosition =
-                    value;
-            }
-
-
-            UpdateComparisonVisual();
-        }
-
-
-        // =============================================================
-        // MOUSE DOWN
-        // =============================================================
-
-        private void PhotoComparisonArea_MouseLeftButtonDown(
-            object sender,
-            MouseButtonEventArgs e)
-        {
-            if (ViewModel == null)
-                return;
-
-
-            // Cannot compare without both images.
-            if (ViewModel.OriginalImage == null ||
-                ViewModel.EditedImage == null)
-            {
-                return;
-            }
-
-
-            if (ImageHost.ActualWidth <= 0 ||
-                ImageHost.ActualHeight <= 0)
-            {
-                return;
-            }
-
-
-            Point point =
-                e.GetPosition(ImageHost);
-
-
-            if (!IsInsideImageHost(point))
-                return;
-
-
-            _comparisonDragging =
-                true;
-
-
-            PhotoComparisonArea.CaptureMouse();
-
-
-            UpdateComparisonFromImagePoint(
-                point);
-
-
-            e.Handled =
-                true;
-        }
-
-
-        // =============================================================
-        // MOUSE MOVE
-        // =============================================================
-
-        private void PhotoComparisonArea_MouseMove(
-            object sender,
-            MouseEventArgs e)
-        {
-            if (!_comparisonDragging)
-                return;
-
-
-            if (e.LeftButton !=
-                MouseButtonState.Pressed)
-            {
-                StopComparisonDragging();
-                return;
-            }
-
-
-            Point point =
-                e.GetPosition(ImageHost);
-
-
-            UpdateComparisonFromImagePoint(
-                point);
-
-
-            e.Handled =
-                true;
-        }
-
-
-        // =============================================================
-        // MOUSE UP
-        // =============================================================
-
-        private void PhotoComparisonArea_MouseLeftButtonUp(
-            object sender,
-            MouseButtonEventArgs e)
-        {
-            if (!_comparisonDragging)
-                return;
-
-
-            StopComparisonDragging();
-
-
-            e.Handled =
-                true;
-        }
-
-
-        // =============================================================
-        // MOUSE LEAVE
-        // =============================================================
-
-        private void PhotoComparisonArea_MouseLeave(
-            object sender,
-            MouseEventArgs e)
-        {
-            if (!_comparisonDragging)
-                return;
-
-
-            if (e.LeftButton !=
-                MouseButtonState.Pressed)
-            {
-                StopComparisonDragging();
-            }
-        }
-
-
-        // =============================================================
-        // CHECK POINT
-        // =============================================================
-
-        private bool IsInsideImageHost(
-            Point point)
-        {
-            return
-                point.X >= 0 &&
-                point.Y >= 0 &&
-                point.X <= ImageHost.ActualWidth &&
-                point.Y <= ImageHost.ActualHeight;
-        }
-
-
-        // =============================================================
-        // UPDATE POSITION FROM IMAGE
-        // =============================================================
-
-        private void UpdateComparisonFromImagePoint(
-            Point point)
-        {
-            if (ViewModel == null)
-                return;
-
-
-            if (ViewModel.OriginalImage == null ||
-                ViewModel.EditedImage == null)
-            {
-                return;
-            }
-
-
-            double width =
-                ImageHost.ActualWidth;
-
-
-            if (width <= 0)
-                return;
-
-
-            double x =
-                Math.Clamp(
-                    point.X,
-                    0.0,
-                    width);
-
-
-            double position =
-                width <= 0
-                    ? 50.0
-                    : x / width * 100.0;
-
-
-            ViewModel.ComparisonPosition =
-                Math.Clamp(
-                    position,
-                    0.0,
-                    100.0);
-
-
-            UpdateComparisonVisual();
-        }
-
-
-        // =============================================================
-        // STOP DRAGGING
-        // =============================================================
-
-        private void StopComparisonDragging()
-        {
-            _comparisonDragging =
-                false;
-
-
-            if (PhotoComparisonArea.IsMouseCaptured)
-            {
-                PhotoComparisonArea.ReleaseMouseCapture();
-            }
         }
 
 
@@ -621,13 +437,6 @@ namespace AutoPhotoEditor
             AfterImageControl.Visibility =
                 Visibility.Visible;
 
-            ComparisonDivider.Visibility =
-                Visibility.Visible;
-
-            ComparisonHandle.Visibility =
-                Visibility.Visible;
-
-
             double position =
                 Math.Clamp(
                     ViewModel.ComparisonPosition,
@@ -662,6 +471,14 @@ namespace AutoPhotoEditor
             AfterImageClip.Height =
                 height;
 
+            ComparisonDivider.Visibility =
+                position > 0.0 && position < 100.0
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+
+            ComparisonHandle.Visibility =
+                Visibility.Collapsed;
+
 
             // =========================================================
             // AFTER IMAGE
@@ -688,36 +505,6 @@ namespace AutoPhotoEditor
                         x - 1.0,
                         0.0,
                         Math.Max(0.0, width - 2.0)),
-                    0,
-                    0,
-                    0);
-
-
-            // =========================================================
-            // HANDLE
-            // =========================================================
-
-            const double handleWidth =
-                44.0;
-
-
-            double handleX =
-                x -
-                handleWidth / 2.0;
-
-
-            handleX =
-                Math.Clamp(
-                    handleX,
-                    0.0,
-                    Math.Max(
-                        0.0,
-                        width - handleWidth));
-
-
-            ComparisonHandle.Margin =
-                new Thickness(
-                    handleX,
                     0,
                     0,
                     0);

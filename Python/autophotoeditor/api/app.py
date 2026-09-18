@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 import cv2
+import numpy as np
 from fastapi import BackgroundTasks, Body, FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -33,6 +34,7 @@ from autophotoeditor.processing import (
     extract_image_data,
     geometry_correction,
     lens_correction,
+    manual_adjust,
     masked_adaptive_enhance,
 )
 from autophotoeditor.services.job_events import (
@@ -754,6 +756,7 @@ def pipeline(
 _JOB_ACTIONS = {
     "analyze": analyze,
     "auto-enhance": auto_enhance_route,
+    "manual-adjust": manual_adjust_api,
     "ai-denoise": denoise,
     "apply-preset": preset,
     "geometry-correction": geometry,
@@ -839,6 +842,112 @@ def auto_enhance_api(
     enhanced = auto_enhance.enhance(_read_color(source), analysis, strength=strength)
     auto_enhance._save_image(enhanced, output)
     return _success(_image_artifact(output), analysis=analysis, strength=strength)
+
+
+@app.post("/manual-adjust")
+@job_operation("manual-adjust")
+def manual_adjust_api(
+    payload: dict[str, Any] = Body(...),
+    feather: float = Query(2.0, ge=0.0),
+    job_id: Optional[str] = Query(None),
+) -> dict[str, Any]:
+    image_base64 = payload.get("image_base64")
+    adjustments = payload.get("adjustments")
+    mask_json_data = payload.get("mask_json")
+    mask_names_data = payload.get("mask_names")
+    if not isinstance(image_base64, str) or not isinstance(adjustments, dict):
+        raise HTTPException(
+            status_code=400,
+            detail="JSON body must contain image_base64 and adjustments object",
+        )
+
+    if mask_json_data is not None and not isinstance(mask_json_data, dict):
+        raise HTTPException(status_code=400, detail="mask_json must be an object")
+
+    if mask_names_data is not None:
+        if not isinstance(mask_names_data, list) or not all(
+            isinstance(name, str) and name.strip() for name in mask_names_data
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="mask_names must be a list of non-empty strings",
+            )
+        mask_names = [name.strip().lower() for name in mask_names_data]
+    else:
+        mask_names = []
+
+    try:
+        image = base64.b64decode(image_base64, validate=True)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="image_base64 is not valid base64")
+
+    source, job = _binary_source(image, job_id)
+    try:
+        source_image = _read_color(source)
+
+        if mask_json_data is not None and mask_names:
+            provided_json = job / "provided_manual_masks.json"
+            _save_json(mask_json_data, provided_json)
+            mask_entries = masked_adaptive_enhance.extract_mask_entries(
+                mask_json_data,
+                provided_json,
+                None,
+            )
+
+            selected_masks = [
+                mask_entries[name]
+                for name in mask_names
+                if name in mask_entries
+            ]
+            if not selected_masks:
+                available = ", ".join(sorted(mask_entries)) or "none"
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"None of the selected masks were found. Available masks: {available}",
+                )
+
+            combined_mask = None
+            for mask_path in selected_masks:
+                loaded_mask = masked_adaptive_enhance.load_mask(
+                    mask_path,
+                    source_image.shape[1],
+                    source_image.shape[0],
+                )
+                if loaded_mask is None:
+                    continue
+                combined_mask = (
+                    loaded_mask
+                    if combined_mask is None
+                    else np.maximum(combined_mask, loaded_mask)
+                )
+
+            if combined_mask is None:
+                raise HTTPException(status_code=400, detail="Selected masks could not be loaded")
+
+            adjusted, normalized = manual_adjust.apply_masked(
+                source_image,
+                adjustments,
+                combined_mask,
+                feather_radius=feather,
+            )
+        else:
+            adjusted, normalized = manual_adjust.apply(
+                source_image,
+                adjustments,
+            )
+    except manual_adjust.ManualAdjustmentError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    output = job / "manual-adjusted.png"
+    if not cv2.imwrite(str(output), adjusted):
+        raise HTTPException(status_code=500, detail="Could not write manual adjustment output")
+
+    return _success(
+        _image_artifact(output),
+        adjustments=normalized,
+        mask_names=mask_names,
+        feather=feather,
+    )
 
 
 @app.post("/auto-enhance-data")
@@ -978,11 +1087,21 @@ def masked_enhance_json_api(
         strength=strength, feather=feather, job_id=job_id,
     )
     output = Path(result["output"])
+    report_path = output.with_name(f"{output.stem}_mask_report.json")
+    mask_report = None
+    if report_path.is_file():
+        try:
+            with report_path.open("r", encoding="utf-8") as handle:
+                mask_report = json.load(handle)
+        except (OSError, json.JSONDecodeError):
+            mask_report = None
+
     return _success(
         _image_artifact(output),
         masks_json=result.get("masks_json"),
         strength=strength,
         feather=feather,
+        mask_report=mask_report,
     )
 
 
@@ -1129,6 +1248,7 @@ _PUBLIC_PATHS = {
     "/redoc",
     "/openapi.json",
     "/auto-enhance",
+    "/manual-adjust",
     "/auto-enhance-data",
     "/ai-denoise",
     "/apply-preset",

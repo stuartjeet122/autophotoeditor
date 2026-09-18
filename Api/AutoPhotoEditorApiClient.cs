@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
@@ -102,13 +103,18 @@ public sealed class AutoPhotoEditorApiClient
         byte[] imageBytes,
         string jobId,
         Action<ApiJobEvent>? progress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string device = "auto")
     {
         ValidateImageBytes(imageBytes);
 
+        ValidateDevice(device);
+
         string url =
             "/mask-data?job_id=" +
-            Uri.EscapeDataString(jobId);
+            Uri.EscapeDataString(jobId) +
+            "&device=" +
+            Uri.EscapeDataString(device);
 
         Task<string> requestTask =
             _http.PostBytesAsync(
@@ -141,10 +147,24 @@ public sealed class AutoPhotoEditorApiClient
                     "The API did not return valid mask JSON.");
             }
 
+            var maskNames = new List<string>();
+
+            if (document.RootElement.TryGetProperty(
+                    "masks",
+                    out JsonElement masks) &&
+                masks.ValueKind == JsonValueKind.Object)
+            {
+                foreach (JsonProperty mask in masks.EnumerateObject())
+                {
+                    maskNames.Add(mask.Name);
+                }
+            }
+
             return new MaskDataResult
             {
                 JobId = jobId,
-                MaskJson = artifactData.Clone()
+                MaskJson = artifactData.Clone(),
+                MaskNames = maskNames
             };
         }
         catch (KeyNotFoundException ex)
@@ -166,6 +186,7 @@ public sealed class AutoPhotoEditorApiClient
         JsonElement maskJson,
         double strength = 1.0,
         double feather = 2.0,
+        IReadOnlyCollection<string>? maskNames = null,
         string? jobId = null,
         Action<ApiJobEvent>? progress = null,
         CancellationToken cancellationToken = default)
@@ -194,6 +215,19 @@ public sealed class AutoPhotoEditorApiClient
             Uri.EscapeDataString(feather.ToString(CultureInfo.InvariantCulture)) +
             "&job_id=" +
             Uri.EscapeDataString(jobId);
+
+        if (maskNames != null)
+        {
+            foreach (string maskName in maskNames)
+            {
+                if (string.IsNullOrWhiteSpace(maskName))
+                    continue;
+
+                url +=
+                    "&masks=" +
+                    Uri.EscapeDataString(maskName.Trim());
+            }
+        }
 
         Task<string> requestTask =
             _http.PostJsonAsync(
@@ -228,7 +262,10 @@ public sealed class AutoPhotoEditorApiClient
             return new AutoEnhanceApiResult
             {
                 JobId = jobId,
-                ImageBytes = Convert.FromBase64String(base64)
+                ImageBytes = Convert.FromBase64String(base64),
+                MaskReport = document.RootElement.TryGetProperty("mask_report", out JsonElement maskedReport)
+                    ? maskedReport.Clone()
+                    : default
             };
         }
         catch (KeyNotFoundException ex)
@@ -249,6 +286,198 @@ public sealed class AutoPhotoEditorApiClient
                 "The API returned invalid image data.",
                 ex);
         }
+    }
+
+    public Task<AutoEnhanceApiResult> DenoiseAsync(
+        byte[] imageBytes,
+        string device = "cpu",
+        string? jobId = null,
+        Action<ApiJobEvent>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateDevice(device);
+
+        jobId ??= CreateJobId();
+
+        string url =
+            "/ai-denoise?device=" +
+            Uri.EscapeDataString(device) +
+            "&job_id=" +
+            Uri.EscapeDataString(jobId);
+
+        return PostBinaryImageOperationAsync(
+            imageBytes,
+            url,
+            jobId,
+            progress,
+            cancellationToken,
+            "The API returned an empty denoised image.");
+    }
+
+    public Task<AutoEnhanceApiResult> GeometryCorrectionAsync(
+        byte[] imageBytes,
+        string mode = "auto",
+        double rotate = 0.0,
+        double? verticalStrength = null,
+        double? horizontalStrength = null,
+        double aspect = 0.0,
+        double scale = 100.0,
+        double x = 0.0,
+        double y = 0.0,
+        bool crop = true,
+        string? jobId = null,
+        Action<ApiJobEvent>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (mode is not ("off" or "auto" or "level" or "vertical" or "horizontal" or "full"))
+        {
+            throw new ArgumentException(
+                "Geometry mode is invalid.",
+                nameof(mode));
+        }
+
+        if (scale <= 0.0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(scale),
+                "Scale must be greater than zero.");
+        }
+
+        jobId ??= CreateJobId();
+
+        string url =
+            "/geometry-correction?mode=" +
+            Uri.EscapeDataString(mode) +
+            "&rotate=" +
+            rotate.ToString(CultureInfo.InvariantCulture) +
+            "&aspect=" +
+            aspect.ToString(CultureInfo.InvariantCulture) +
+            "&scale=" +
+            scale.ToString(CultureInfo.InvariantCulture) +
+            "&x=" +
+            x.ToString(CultureInfo.InvariantCulture) +
+            "&y=" +
+            y.ToString(CultureInfo.InvariantCulture) +
+            "&crop=" +
+            crop.ToString().ToLowerInvariant() +
+            "&job_id=" +
+            Uri.EscapeDataString(jobId);
+
+        if (verticalStrength.HasValue)
+        {
+            url +=
+                "&vertical_strength=" +
+                verticalStrength.Value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        if (horizontalStrength.HasValue)
+        {
+            url +=
+                "&horizontal_strength=" +
+                horizontalStrength.Value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        return PostBinaryImageOperationAsync(
+            imageBytes,
+            url,
+            jobId,
+            progress,
+            cancellationToken,
+            "The API returned an empty geometry-corrected image.");
+    }
+
+    public Task<AutoEnhanceApiResult> LensCorrectionAsync(
+        byte[] imageBytes,
+        bool manual = false,
+        double k1 = 0.0,
+        double k2 = 0.0,
+        double k3 = 0.0,
+        double p1 = 0.0,
+        double p2 = 0.0,
+        double strength = 1.0,
+        double centerX = 0.5,
+        double centerY = 0.5,
+        double focalScale = 1.0,
+        bool noCrop = false,
+        string? cameraMaker = null,
+        string? cameraModel = null,
+        string? lensMaker = null,
+        string? lensModel = null,
+        string? jobId = null,
+        Action<ApiJobEvent>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        jobId ??= CreateJobId();
+
+        string url =
+            "/lens-correction?manual=" +
+            manual.ToString().ToLowerInvariant() +
+            "&k1=" +
+            k1.ToString(CultureInfo.InvariantCulture) +
+            "&k2=" +
+            k2.ToString(CultureInfo.InvariantCulture) +
+            "&k3=" +
+            k3.ToString(CultureInfo.InvariantCulture) +
+            "&p1=" +
+            p1.ToString(CultureInfo.InvariantCulture) +
+            "&p2=" +
+            p2.ToString(CultureInfo.InvariantCulture) +
+            "&strength=" +
+            strength.ToString(CultureInfo.InvariantCulture) +
+            "&center_x=" +
+            centerX.ToString(CultureInfo.InvariantCulture) +
+            "&center_y=" +
+            centerY.ToString(CultureInfo.InvariantCulture) +
+            "&focal_scale=" +
+            focalScale.ToString(CultureInfo.InvariantCulture) +
+            "&no_crop=" +
+            noCrop.ToString().ToLowerInvariant() +
+            "&job_id=" +
+            Uri.EscapeDataString(jobId);
+
+        AppendOptionalQuery(ref url, "camera_maker", cameraMaker);
+        AppendOptionalQuery(ref url, "camera_model", cameraModel);
+        AppendOptionalQuery(ref url, "lens_maker", lensMaker);
+        AppendOptionalQuery(ref url, "lens_model", lensModel);
+
+        return PostBinaryImageOperationAsync(
+            imageBytes,
+            url,
+            jobId,
+            progress,
+            cancellationToken,
+            "The API returned an empty lens-corrected image.");
+    }
+
+    public Task<AutoEnhanceApiResult> PipelineAsync(
+        byte[] imageBytes,
+        string stages = "analyze,auto-enhance",
+        string? jobId = null,
+        Action<ApiJobEvent>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(stages))
+        {
+            throw new ArgumentException(
+                "At least one pipeline stage is required.",
+                nameof(stages));
+        }
+
+        jobId ??= CreateJobId();
+
+        string url =
+            "/pipeline?stages=" +
+            Uri.EscapeDataString(stages) +
+            "&job_id=" +
+            Uri.EscapeDataString(jobId);
+
+        return PostBinaryImageOperationAsync(
+            imageBytes,
+            url,
+            jobId,
+            progress,
+            cancellationToken,
+            "The API returned an empty pipeline image.");
     }
 
     public async Task<AutoEnhanceApiResult> ApplyPresetAsync(
@@ -745,6 +974,104 @@ public sealed class AutoPhotoEditorApiClient
         };
     }
 
+    public async Task<AutoEnhanceApiResult> ManualAdjustAsync(
+        byte[] imageBytes,
+        ManualAdjustmentSettings adjustments,
+        string? jobId = null,
+        Action<ApiJobEvent>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateImageBytes(imageBytes);
+
+        if (adjustments == null)
+        {
+            throw new ArgumentNullException(nameof(adjustments));
+        }
+
+        jobId ??= CreateJobId();
+
+        var request = new Dictionary<string, object?>
+        {
+            ["image_base64"] = Convert.ToBase64String(imageBytes),
+            ["adjustments"] = adjustments
+        };
+
+        string url =
+            "/manual-adjust?job_id=" +
+            Uri.EscapeDataString(jobId);
+
+        if (adjustments.UseMask)
+        {
+            if (adjustments.MaskJson.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
+            {
+                throw new ArgumentException(
+                    "Mask JSON is required when manual adjustment targets a mask.",
+                    nameof(adjustments));
+            }
+
+            if (adjustments.MaskNames == null || adjustments.MaskNames.Count == 0)
+            {
+                throw new ArgumentException(
+                    "At least one mask name is required when manual adjustment targets a mask.",
+                    nameof(adjustments));
+            }
+
+            request["mask_json"] = adjustments.MaskJson;
+            request["mask_names"] = adjustments.MaskNames;
+            url +=
+                "&feather=" +
+                Uri.EscapeDataString(
+                    Math.Max(0.0, adjustments.Feather)
+                        .ToString(CultureInfo.InvariantCulture));
+        }
+
+        Task<string> requestTask =
+            _http.PostJsonAsync(
+                url,
+                request,
+                cancellationToken);
+
+        string response =
+            await WaitForOperationAsync(
+                jobId,
+                progress,
+                requestTask,
+                cancellationToken);
+
+        using JsonDocument document = JsonDocument.Parse(response);
+        JsonElement root = document.RootElement;
+
+        if (!root.TryGetProperty("artifact", out JsonElement artifact) ||
+            !artifact.TryGetProperty("data", out JsonElement imageData) ||
+            imageData.ValueKind != JsonValueKind.String)
+        {
+            throw new AutoPhotoEditorApiException(
+                "The API response does not contain a manually adjusted image.");
+        }
+
+        string? base64 = imageData.GetString();
+        if (string.IsNullOrWhiteSpace(base64))
+        {
+            throw new AutoPhotoEditorApiException(
+                "The API returned an empty manually adjusted image.");
+        }
+
+        try
+        {
+            return new AutoEnhanceApiResult
+            {
+                JobId = jobId,
+                ImageBytes = Convert.FromBase64String(base64)
+            };
+        }
+        catch (FormatException ex)
+        {
+            throw new AutoPhotoEditorApiException(
+                "The API returned invalid manually adjusted image data.",
+                ex);
+        }
+    }
+
     public async Task<AutoEnhanceDataResult> AutoEnhanceDataAsync(
         string imagePath,
         Action<ApiJobEvent>? progress = null,
@@ -893,21 +1220,16 @@ public sealed class AutoPhotoEditorApiClient
                 cancellationToken);
 
 
+        ApiJobStatus result;
+
         try
         {
-            ApiJobStatus result =
+            result =
                 JsonSerializer.Deserialize<ApiJobStatus>(
                     json,
                     JsonOptions)
                 ?? throw new AutoPhotoEditorApiException(
                     "The API returned an empty job status.");
-
-
-            result.JobId =
-                jobId;
-
-
-            return result;
         }
         catch (JsonException ex)
         {
@@ -915,6 +1237,41 @@ public sealed class AutoPhotoEditorApiClient
                 "The API returned invalid job status JSON.",
                 ex);
         }
+
+        result.JobId =
+            jobId;
+
+        if (result.Latest != null)
+        {
+            result.Status = result.Latest.Type;
+            result.Stage = result.Latest.Stage;
+            result.Message = result.Latest.Message;
+            result.Progress = result.Latest.EffectiveProgress;
+        }
+
+        return result;
+    }
+
+    public async Task CancelJobAsync(
+        string jobId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(jobId))
+        {
+            throw new ArgumentException(
+                "Job ID cannot be empty.",
+                nameof(jobId));
+        }
+
+        string url =
+            "/jobs/" +
+            Uri.EscapeDataString(jobId) +
+            "/cancel";
+
+        await _http.PostJsonAsync(
+            url,
+            new { },
+            cancellationToken);
     }
 
 
@@ -1086,7 +1443,7 @@ public sealed class AutoPhotoEditorApiClient
                 status.Message,
 
             Progress =
-                status.Progress,
+                status.Progress ?? status.Latest?.EffectiveProgress,
 
             Final =
                 IsTerminalStatus(status),
@@ -1179,6 +1536,104 @@ public sealed class AutoPhotoEditorApiClient
     // ========================================================================
     // CREATE JOB ID
     // ========================================================================
+
+    private async Task<AutoEnhanceApiResult> PostBinaryImageOperationAsync(
+        byte[] imageBytes,
+        string url,
+        string jobId,
+        Action<ApiJobEvent>? progress,
+        CancellationToken cancellationToken,
+        string emptyImageMessage)
+    {
+        ValidateImageBytes(imageBytes);
+
+        Task<string> requestTask =
+            _http.PostBytesAsync(
+                url,
+                imageBytes,
+                "application/octet-stream",
+                cancellationToken);
+
+        string response =
+            await WaitForOperationAsync(
+                jobId,
+                progress,
+                requestTask,
+                cancellationToken);
+
+        try
+        {
+            using JsonDocument document =
+                JsonDocument.Parse(response);
+
+            JsonElement root =
+                document.RootElement;
+
+            if (!root.TryGetProperty(
+                    "artifact",
+                    out JsonElement artifact) ||
+                !artifact.TryGetProperty(
+                    "data",
+                    out JsonElement imageData) ||
+                imageData.ValueKind != JsonValueKind.String)
+            {
+                throw new AutoPhotoEditorApiException(
+                    "The API response does not contain an image artifact.");
+            }
+
+            string? base64 =
+                imageData.GetString();
+
+            if (string.IsNullOrWhiteSpace(base64))
+            {
+                throw new AutoPhotoEditorApiException(
+                    emptyImageMessage);
+            }
+
+            return new AutoEnhanceApiResult
+            {
+                JobId = jobId,
+                ImageBytes = Convert.FromBase64String(base64)
+            };
+        }
+        catch (JsonException ex)
+        {
+            throw new AutoPhotoEditorApiException(
+                "The API returned invalid image JSON.",
+                ex);
+        }
+        catch (FormatException ex)
+        {
+            throw new AutoPhotoEditorApiException(
+                "The API returned invalid image data.",
+                ex);
+        }
+    }
+
+    private static void AppendOptionalQuery(
+        ref string url,
+        string name,
+        string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return;
+
+        url +=
+            "&" +
+            name +
+            "=" +
+            Uri.EscapeDataString(value.Trim());
+    }
+
+    private static void ValidateDevice(string device)
+    {
+        if (device is not ("auto" or "cpu" or "cuda"))
+        {
+            throw new ArgumentException(
+                "Device must be auto, cpu, or cuda.",
+                nameof(device));
+        }
+    }
 
     private static string CreateJobId()
     {

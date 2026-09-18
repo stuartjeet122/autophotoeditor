@@ -1,0 +1,484 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Sjeetoo\\.copilot\\plans\\plan-improve-window-controls,-direct-comparison,-responsive-layout,-and-masked-manual.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|MarkdownSecurePreview"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\api\\autophotoeditorapiclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:api\\autophotoeditorapiclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\python\\tests\\test_manual_adjust.py||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:python\\tests\\test_manual_adjust.py||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\api\\autoenhanceapiresult.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:api\\autoenhanceapiresult.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\models\\photoeditjob.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:models\\photoeditjob.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\api\\apimodels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:api\\apimodels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\python\\tests\\test_manual_adjust_masked.py||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:python\\tests\\test_manual_adjust_masked.py||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\python\\autophotoeditor\\processing\\manual_adjust.py||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:python\\autophotoeditor\\processing\\manual_adjust.py||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Sjeetoo\\.copilot\\plans\\plan-add-manual-editing,-robust-incremental-history,-and-redesign-the-wpf-editor.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|MarkdownSecurePreview"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\python\\autophotoeditor\\api\\app.py||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:python\\autophotoeditor\\api\\app.py||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\viewmodels\\mainviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:viewmodels\\mainviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Sjeetoo\\.copilot\\plans\\plan-complete-wpf-api-integration-and-mask-export.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|MarkdownSecurePreview"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\api\\apijobstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:api\\apijobstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\models\\lutitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:models\\lutitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\api\\autophotoeditorapiconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:api\\autophotoeditorapiconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\api\\autophotoeditorapiexception.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:api\\autophotoeditorapiexception.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\api\\apihttphelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:api\\apihttphelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\sjeetoo\\desktop\\gitlab\\autophotoeditor\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 40,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:131:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:134:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:135:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:136:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:137:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:138:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:139:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:140:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:141:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:142:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:143:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:144:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:145:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:146:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:147:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:148:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:149:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:150:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:151:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:152:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:153:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:131:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:134:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:133:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:132:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:130:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "plan-improve-window-controls,-direct-comparison,-responsive-layout,-and-masked-manual.md [Preview]",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\.copilot\\plans\\plan-improve-window-controls,-direct-comparison,-responsive-layout,-and-masked-manual.md",
+              "RelativeDocumentMoniker": "..\\..\\..\\.copilot\\plans\\plan-improve-window-controls,-direct-comparison,-responsive-layout,-and-masked-manual.md",
+              "ToolTip": "C:\\Users\\Sjeetoo\\.copilot\\plans\\plan-improve-window-controls,-direct-comparison,-responsive-layout,-and-masked-manual.md [Preview]",
+              "RelativeToolTip": "..\\..\\..\\.copilot\\plans\\plan-improve-window-controls,-direct-comparison,-responsive-layout,-and-masked-manual.md [Preview]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-09-18T13:48:00.935Z",
+              "EditorCaption": " [Preview]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "ApiModels.cs",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Api\\ApiModels.cs",
+              "RelativeDocumentMoniker": "Api\\ApiModels.cs",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Api\\ApiModels.cs",
+              "RelativeToolTip": "Api\\ApiModels.cs",
+              "ViewState": "AgIAANQAAAAAAAAAAAAAwOoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T12:24:31.81Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "PhotoEditJob.cs",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Models\\PhotoEditJob.cs",
+              "RelativeDocumentMoniker": "Models\\PhotoEditJob.cs",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Models\\PhotoEditJob.cs",
+              "RelativeToolTip": "Models\\PhotoEditJob.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAFoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T12:24:31.816Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "AutoEnhanceApiResult.cs",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Api\\AutoEnhanceApiResult.cs",
+              "RelativeDocumentMoniker": "Api\\AutoEnhanceApiResult.cs",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Api\\AutoEnhanceApiResult.cs",
+              "RelativeToolTip": "Api\\AutoEnhanceApiResult.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T12:24:31.826Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "test_manual_adjust.py",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Python\\tests\\test_manual_adjust.py",
+              "RelativeDocumentMoniker": "Python\\tests\\test_manual_adjust.py",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Python\\tests\\test_manual_adjust.py",
+              "RelativeToolTip": "Python\\tests\\test_manual_adjust.py",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAD0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2026-09-18T12:47:00.361Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "AutoPhotoEditorApiClient.cs",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Api\\AutoPhotoEditorApiClient.cs",
+              "RelativeDocumentMoniker": "Api\\AutoPhotoEditorApiClient.cs",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Api\\AutoPhotoEditorApiClient.cs",
+              "RelativeToolTip": "Api\\AutoPhotoEditorApiClient.cs",
+              "ViewState": "AgIAAPgAAAAAAAAAAADwvxIBAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T12:24:31.822Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "test_manual_adjust_masked.py",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Python\\tests\\test_manual_adjust_masked.py",
+              "RelativeDocumentMoniker": "Python\\tests\\test_manual_adjust_masked.py",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Python\\tests\\test_manual_adjust_masked.py",
+              "RelativeToolTip": "Python\\tests\\test_manual_adjust_masked.py",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2026-09-18T13:28:33.632Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "manual_adjust.py",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Python\\autophotoeditor\\processing\\manual_adjust.py",
+              "RelativeDocumentMoniker": "Python\\autophotoeditor\\processing\\manual_adjust.py",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Python\\autophotoeditor\\processing\\manual_adjust.py",
+              "RelativeToolTip": "Python\\autophotoeditor\\processing\\manual_adjust.py",
+              "ViewState": "AgIAAJ8AAAAAAAAAAAAcwL4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2026-09-18T12:46:03.529Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "plan-add-manual-editing,-robust-incremental-history,-and-redesign-the-wpf-editor.md [Preview]",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\.copilot\\plans\\plan-add-manual-editing,-robust-incremental-history,-and-redesign-the-wpf-editor.md",
+              "RelativeDocumentMoniker": "..\\..\\..\\.copilot\\plans\\plan-add-manual-editing,-robust-incremental-history,-and-redesign-the-wpf-editor.md",
+              "ToolTip": "C:\\Users\\Sjeetoo\\.copilot\\plans\\plan-add-manual-editing,-robust-incremental-history,-and-redesign-the-wpf-editor.md [Preview]",
+              "RelativeToolTip": "..\\..\\..\\.copilot\\plans\\plan-add-manual-editing,-robust-incremental-history,-and-redesign-the-wpf-editor.md [Preview]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-09-18T13:19:59.086Z",
+              "EditorCaption": " [Preview]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "app.py",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Python\\autophotoeditor\\api\\app.py",
+              "RelativeDocumentMoniker": "Python\\autophotoeditor\\api\\app.py",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Python\\autophotoeditor\\api\\app.py",
+              "RelativeToolTip": "Python\\autophotoeditor\\api\\app.py",
+              "ViewState": "AgIAADIEAAAAAAAAAAAvwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2026-09-18T12:46:41.307Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "MainWindow.xaml",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\MainWindow.xaml",
+              "RelativeToolTip": "MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-09-18T12:56:12.211Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "MainWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\MainWindow.xaml.cs",
+              "RelativeToolTip": "MainWindow.xaml.cs",
+              "ViewState": "AgIAAGQAAAAAAAAAAAAtwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T12:56:18.854Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "MainViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\ViewModels\\MainViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\MainViewModel.cs",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\ViewModels\\MainViewModel.cs",
+              "RelativeToolTip": "ViewModels\\MainViewModel.cs",
+              "ViewState": "AgIAANwJAAAAAAAAAAAswAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T12:24:31.795Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "plan-complete-wpf-api-integration-and-mask-export.md [Preview]",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\.copilot\\plans\\plan-complete-wpf-api-integration-and-mask-export.md",
+              "RelativeDocumentMoniker": "..\\..\\..\\.copilot\\plans\\plan-complete-wpf-api-integration-and-mask-export.md",
+              "ToolTip": "C:\\Users\\Sjeetoo\\.copilot\\plans\\plan-complete-wpf-api-integration-and-mask-export.md [Preview]",
+              "RelativeToolTip": "..\\..\\..\\.copilot\\plans\\plan-complete-wpf-api-integration-and-mask-export.md [Preview]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-09-18T12:38:50.752Z",
+              "EditorCaption": " [Preview]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "ApiJobStatus.cs",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Api\\ApiJobStatus.cs",
+              "RelativeDocumentMoniker": "Api\\ApiJobStatus.cs",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Api\\ApiJobStatus.cs",
+              "RelativeToolTip": "Api\\ApiJobStatus.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T12:24:31.819Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "AutoPhotoEditorApiException.cs",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Api\\AutoPhotoEditorApiException.cs",
+              "RelativeDocumentMoniker": "Api\\AutoPhotoEditorApiException.cs",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Api\\AutoPhotoEditorApiException.cs",
+              "RelativeToolTip": "Api\\AutoPhotoEditorApiException.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T12:24:31.793Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "App.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\App.xaml.cs",
+              "RelativeDocumentMoniker": "App.xaml.cs",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\App.xaml.cs",
+              "RelativeToolTip": "App.xaml.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAqwBgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T12:24:31.769Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "LUTItem.cs",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Models\\LUTItem.cs",
+              "RelativeDocumentMoniker": "Models\\LUTItem.cs",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Models\\LUTItem.cs",
+              "RelativeToolTip": "Models\\LUTItem.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T12:24:31.813Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "AutoPhotoEditorApiConfig.cs",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Api\\AutoPhotoEditorApiConfig.cs",
+              "RelativeDocumentMoniker": "Api\\AutoPhotoEditorApiConfig.cs",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Api\\AutoPhotoEditorApiConfig.cs",
+              "RelativeToolTip": "Api\\AutoPhotoEditorApiConfig.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T12:24:31.829Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "ApiHttpHelper.cs",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Api\\ApiHttpHelper.cs",
+              "RelativeDocumentMoniker": "Api\\ApiHttpHelper.cs",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\Api\\ApiHttpHelper.cs",
+              "RelativeToolTip": "Api\\ApiHttpHelper.cs",
+              "ViewState": "AgIAAEMAAAAAAAAAAAA7wG8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-18T12:24:31.831Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "App.xaml",
+              "DocumentMoniker": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\App.xaml",
+              "RelativeDocumentMoniker": "App.xaml",
+              "ToolTip": "C:\\Users\\Sjeetoo\\Desktop\\Gitlab\\autophotoeditor\\App.xaml",
+              "RelativeToolTip": "App.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-09-18T12:24:31.834Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

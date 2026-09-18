@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace AutoPhotoEditor.Models
 {
@@ -6,6 +7,7 @@ namespace AutoPhotoEditor.Models
     {
         AutoEnhance,
         ColorGrade,
+        ManualAdjust,
         Denoise,
         GeometryCorrection,
         LensCorrection,
@@ -44,6 +46,23 @@ namespace AutoPhotoEditor.Models
         /// Analysis JSON returned by /auto-enhance-data.
         /// </summary>
         public string? AnalysisJson { get; init; }
+
+
+        /// <summary>
+        /// Serialized settings used for this operation so the action can be
+        /// inspected or applied again later.
+        /// </summary>
+        public string? SettingsJson { get; init; }
+
+        /// <summary>
+        /// Indicates that this operation was limited to selected masks.
+        /// </summary>
+        public bool IsMaskScoped { get; init; }
+
+        /// <summary>
+        /// Selected semantic mask names used by a mask-scoped operation.
+        /// </summary>
+        public IReadOnlyList<string> MaskNames { get; init; } = Array.Empty<string>();
 
         /// <summary>
         /// Embedded mask JSON returned by /mask-data.

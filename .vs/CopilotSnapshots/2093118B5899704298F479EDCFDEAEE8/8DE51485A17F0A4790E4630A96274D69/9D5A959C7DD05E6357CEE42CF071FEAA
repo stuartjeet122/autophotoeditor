@@ -1,0 +1,195 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace AutoPhotoEditor.Api
+{
+    public sealed class ApiJobEvent
+    {
+        [JsonPropertyName("job_id")]
+        public string JobId { get; set; } = string.Empty;
+
+        [JsonPropertyName("type")]
+        public string Type { get; set; } = string.Empty;
+
+        [JsonPropertyName("stage")]
+        public string? Stage { get; set; }
+
+        [JsonPropertyName("message")]
+        public string? Message { get; set; }
+
+        [JsonPropertyName("final")]
+        public bool Final { get; set; }
+
+        [JsonPropertyName("progress")]
+        public double? Progress { get; set; }
+
+        [JsonPropertyName("percent")]
+        public double? Percent { get; set; }
+
+        /// <summary>
+        /// Original JSON event received from the API.
+        /// </summary>
+        [JsonIgnore]
+        public string RawJson { get; set; } = string.Empty;
+
+        [JsonIgnore]
+        public double? EffectiveProgress => Progress ?? Percent;
+
+        /// <summary>
+        /// Safely parses an API event from JSON.
+        /// </summary>
+        public static ApiJobEvent? FromJson(
+            string json,
+            JsonSerializerOptions? options = null)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                return null;
+
+            try
+            {
+                var result =
+                    JsonSerializer.Deserialize<ApiJobEvent>(
+                        json,
+                        options);
+
+                if (result != null)
+                    result.RawJson = json;
+
+                return result;
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+    }
+
+
+    // ================================================================
+    // AUTO ENHANCE DATA RESULT
+    // ================================================================
+
+    public sealed class AutoEnhanceDataResult
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; set; }
+
+        [JsonPropertyName("job_id")]
+        public string JobId { get; set; } = string.Empty;
+
+        [JsonPropertyName("artifact")]
+        public AutoEnhanceArtifact? Artifact { get; set; }
+
+
+        /// <summary>
+        /// Convenience property containing artifact.data.
+        /// </summary>
+        [JsonIgnore]
+        public JsonElement Analysis
+        {
+            get
+            {
+                if (Artifact == null)
+                    return default;
+
+                return Artifact.Data;
+            }
+        }
+
+
+        /// <summary>
+        /// Returns artifact.data as its original JSON.
+        /// </summary>
+        [JsonIgnore]
+        public string AnalysisJson
+        {
+            get
+            {
+                JsonElement analysis = Analysis;
+
+                if (analysis.ValueKind == JsonValueKind.Undefined ||
+                    analysis.ValueKind == JsonValueKind.Null)
+                {
+                    return string.Empty;
+                }
+
+                return analysis.GetRawText();
+            }
+        }
+
+
+        /// <summary>
+        /// Extracts:
+        ///
+        /// artifact.data.metadata.file_path
+        /// </summary>
+        [JsonIgnore]
+        public string ImagePath
+        {
+            get
+            {
+                JsonElement data = Analysis;
+
+                if (data.ValueKind != JsonValueKind.Object)
+                    return string.Empty;
+
+
+                if (!data.TryGetProperty(
+                        "metadata",
+                        out JsonElement metadata))
+                {
+                    return string.Empty;
+                }
+
+
+                if (metadata.ValueKind != JsonValueKind.Object)
+                    return string.Empty;
+
+
+                if (!metadata.TryGetProperty(
+                        "file_path",
+                        out JsonElement filePath))
+                {
+                    return string.Empty;
+                }
+
+
+                if (filePath.ValueKind != JsonValueKind.String)
+                    return string.Empty;
+
+
+                return filePath.GetString() ?? string.Empty;
+            }
+        }
+    }
+
+
+    // ================================================================
+    // AUTO ENHANCE ARTIFACT
+    // ================================================================
+
+    public sealed class AutoEnhanceArtifact
+    {
+        [JsonPropertyName("kind")]
+        public string Kind { get; set; } = string.Empty;
+
+        [JsonPropertyName("data")]
+        public JsonElement Data { get; set; }
+    }
+
+    public sealed class MaskDataResult
+    {
+        public string JobId { get; set; } = string.Empty;
+
+        public JsonElement MaskJson { get; set; }
+
+        public IReadOnlyList<string> MaskNames { get; init; } = Array.Empty<string>();
+
+        public string MaskJsonText =>
+            MaskJson.ValueKind == JsonValueKind.Undefined
+                ? string.Empty
+                : MaskJson.GetRawText();
+    }
+}

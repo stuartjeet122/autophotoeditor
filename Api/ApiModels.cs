@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace AutoPhotoEditor.Api
@@ -23,11 +25,17 @@ namespace AutoPhotoEditor.Api
         [JsonPropertyName("progress")]
         public double? Progress { get; set; }
 
+        [JsonPropertyName("percent")]
+        public double? Percent { get; set; }
+
         /// <summary>
         /// Original JSON event received from the API.
         /// </summary>
         [JsonIgnore]
         public string RawJson { get; set; } = string.Empty;
+
+        [JsonIgnore]
+        public double? EffectiveProgress => Progress ?? Percent;
 
         /// <summary>
         /// Safely parses an API event from JSON.
@@ -177,9 +185,51 @@ namespace AutoPhotoEditor.Api
 
         public JsonElement MaskJson { get; set; }
 
+        public IReadOnlyList<string> MaskNames { get; init; } = Array.Empty<string>();
+
         public string MaskJsonText =>
             MaskJson.ValueKind == JsonValueKind.Undefined
                 ? string.Empty
                 : MaskJson.GetRawText();
+    }
+
+
+    public sealed class ManualAdjustmentSettings
+    {
+        [JsonPropertyName("exposure")]
+        public double Exposure { get; set; }
+
+        [JsonPropertyName("contrast")]
+        public double Contrast { get; set; }
+
+        [JsonPropertyName("highlights")]
+        public double Highlights { get; set; }
+
+        [JsonPropertyName("shadows")]
+        public double Shadows { get; set; }
+
+        [JsonPropertyName("temperature")]
+        public double Temperature { get; set; }
+
+        [JsonPropertyName("tint")]
+        public double Tint { get; set; }
+
+        [JsonPropertyName("saturation")]
+        public double Saturation { get; set; }
+
+        [JsonPropertyName("sharpness")]
+        public double Sharpness { get; set; }
+
+        [JsonIgnore]
+        public bool UseMask { get; set; }
+
+        [JsonIgnore]
+        public System.Text.Json.JsonElement MaskJson { get; set; }
+
+        [JsonIgnore]
+        public IReadOnlyList<string> MaskNames { get; set; } = Array.Empty<string>();
+
+        [JsonIgnore]
+        public double Feather { get; set; } = 2.0;
     }
 }
