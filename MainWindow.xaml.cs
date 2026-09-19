@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using AutoPhotoEditor.ViewModels;
+using AutoPhotoEditor.Models;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 
@@ -129,7 +130,8 @@ namespace AutoPhotoEditor
                 e.PropertyName != nameof(MainViewModel.EditedImage) &&
                 e.PropertyName != nameof(MainViewModel.EditedImagePath) &&
                 e.PropertyName != nameof(MainViewModel.ComparisonPosition) &&
-                e.PropertyName != nameof(MainViewModel.HistoryIndex))
+                e.PropertyName != nameof(MainViewModel.HistoryIndex) &&
+                e.PropertyName != nameof(MainViewModel.HoveredMaskImage))
             {
                 return;
             }
@@ -335,6 +337,12 @@ namespace AutoPhotoEditor
                     1.0,
                     displayHeight);
 
+            MaskHighlightOverlay.Width = ImageHost.Width;
+            MaskHighlightOverlay.Height = ImageHost.Height;
+            MaskHighlightOverlay.Visibility = ViewModel.HoveredMaskImage == null
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+
 
             // ---------------------------------------------------------
             // Both images MUST occupy the exact same display rectangle.
@@ -403,6 +411,9 @@ namespace AutoPhotoEditor
             AfterImageControl.Height =
                 height;
 
+            MaskHighlightOverlay.Width = width;
+            MaskHighlightOverlay.Height = height;
+
 
             // ---------------------------------------------------------
             // NO EDITED IMAGE
@@ -413,101 +424,41 @@ namespace AutoPhotoEditor
 
             if (ViewModel.EditedImage == null)
             {
-                AfterImageControl.Visibility =
-                    Visibility.Collapsed;
-
-                ComparisonDivider.Visibility =
-                    Visibility.Collapsed;
-
-                ComparisonHandle.Visibility =
-                    Visibility.Collapsed;
-
-
-                AfterImageClip.Width =
-                    0;
-
-                AfterImageClip.Height =
-                    height;
-
-
+                AfterImageControl.Visibility = Visibility.Collapsed;
+                AfterImageClip.Width = 0;
+                AfterImageClip.Height = height;
+                BeforeImageControl.Opacity = 1.0;
+                AfterImageControl.Opacity = 0.0;
                 return;
             }
 
 
-            AfterImageControl.Visibility =
-                Visibility.Visible;
+            AfterImageControl.Visibility = Visibility.Visible;
 
-            double position =
-                Math.Clamp(
-                    ViewModel.ComparisonPosition,
-                    0.0,
-                    100.0);
+            double position = Math.Clamp(ViewModel.ComparisonPosition, 0.0, 100.0);
 
+            if (position <= 1.0)
+            {
+                AfterImageClip.Width = 0;
+                AfterImageClip.Height = height;
+                BeforeImageControl.Opacity = 1.0;
+                AfterImageControl.Opacity = 0.0;
+                return;
+            }
 
-            double x =
-                width *
-                position /
-                100.0;
+            if (position >= 99.0)
+            {
+                AfterImageClip.Width = width;
+                AfterImageClip.Height = height;
+                BeforeImageControl.Opacity = 0.0;
+                AfterImageControl.Opacity = 1.0;
+                return;
+            }
 
-
-            // =========================================================
-            // AFTER IMAGE CLIP
-            // =========================================================
-
-            // The edited image is full size.
-            //
-            // Only its parent clipping container changes width.
-            //
-            // This prevents the edited image itself being squeezed or
-            // resized into the visible section.
-
-            AfterImageClip.Width =
-                Math.Clamp(
-                    x,
-                    0.0,
-                    width);
-
-
-            AfterImageClip.Height =
-                height;
-
-            ComparisonDivider.Visibility =
-                position > 0.0 && position < 100.0
-                    ? Visibility.Visible
-                    : Visibility.Collapsed;
-
-            ComparisonHandle.Visibility =
-                Visibility.Collapsed;
-
-
-            // =========================================================
-            // AFTER IMAGE
-            // =========================================================
-
-            AfterImageControl.Width =
-                width;
-
-            AfterImageControl.Height =
-                height;
-
-
-            // =========================================================
-            // DIVIDER
-            // =========================================================
-
-            ComparisonDivider.Height =
-                height;
-
-
-            ComparisonDivider.Margin =
-                new Thickness(
-                    Math.Clamp(
-                        x - 1.0,
-                        0.0,
-                        Math.Max(0.0, width - 2.0)),
-                    0,
-                    0,
-                    0);
+            AfterImageClip.Width = width;
+            AfterImageClip.Height = height;
+            BeforeImageControl.Opacity = 1.0;
+            AfterImageControl.Opacity = 1.0;
         }
 
 
@@ -517,19 +468,21 @@ namespace AutoPhotoEditor
 
         private void ResetComparisonVisual()
         {
-            AfterImageClip.Width =
-                0;
+            MaskHighlightOverlay.Visibility = Visibility.Collapsed;
+            AfterImageClip.Width = 0;
+            AfterImageClip.Height = 0;
+            BeforeImageControl.Opacity = 1.0;
+            AfterImageControl.Opacity = 0.0;
+        }
 
-            AfterImageClip.Height =
-                0;
+        private void MaskCheckBox_MouseEnter(object sender, MouseEventArgs e)
+        {
+            ViewModel?.SetHoveredMask((sender as FrameworkElement)?.DataContext as MaskOption);
+        }
 
-
-            ComparisonDivider.Visibility =
-                Visibility.Collapsed;
-
-
-            ComparisonHandle.Visibility =
-                Visibility.Collapsed;
+        private void MaskCheckBox_MouseLeave(object sender, MouseEventArgs e)
+        {
+            ViewModel?.SetHoveredMask(null);
         }
 
 

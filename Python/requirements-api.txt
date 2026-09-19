@@ -2,6 +2,7 @@ fastapi>=0.115
 uvicorn[standard]>=0.30
 numpy>=2.0
 opencv-python>=4.10
+color-constancy-enhancement>=1.3.2
 Pillow>=10.0
 torch>=2.0
 transformers>=4.40

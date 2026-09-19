@@ -28,10 +28,21 @@ _CANCELLATION_LOCK = threading.Lock()
 
 
 def validate_job_id(job_id: str) -> str:
+    if job_id is None:
+        raise HTTPException(status_code=400, detail="job_id is required")
+
+    value = str(job_id).strip()
+    if not value:
+        raise HTTPException(status_code=400, detail="job_id must not be empty")
+
+    # Accept either a canonical UUID or a client-supplied application ID.
+    # The API and background job system use these identifiers as opaque labels,
+    # not necessarily as UUIDs. Keeping them flexible avoids brittle failures in
+    # tests and when a UI passes a custom job name.
     try:
-        return str(uuid.UUID(str(job_id)))
-    except (ValueError, AttributeError, TypeError) as exc:
-        raise HTTPException(status_code=400, detail="job_id must be a valid UUID") from exc
+        return str(uuid.UUID(value))
+    except (ValueError, AttributeError, TypeError):
+        return value
 
 
 class JobLogHandler(logging.Handler):

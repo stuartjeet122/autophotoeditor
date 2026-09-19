@@ -135,11 +135,22 @@ public sealed class AutoPhotoEditorApiClient
             using JsonDocument document =
                 JsonDocument.Parse(response);
 
-            JsonElement artifactData =
+            JsonElement artifact =
                 document.RootElement
-                    .GetProperty("artifact")
-                    .GetProperty("data")
-                    .GetProperty("data");
+                    .GetProperty("artifact");
+
+            JsonElement artifactData =
+                artifact.GetProperty("data");
+
+            // The mask-data endpoint returns the mask document directly in
+            // artifact.data. Accept the older wrapped shape as well.
+            if (artifactData.ValueKind == JsonValueKind.Object &&
+                artifactData.TryGetProperty("data", out JsonElement nestedData) &&
+                nestedData.ValueKind == JsonValueKind.Object &&
+                nestedData.TryGetProperty("masks", out _))
+            {
+                artifactData = nestedData;
+            }
 
             if (artifactData.ValueKind != JsonValueKind.Object)
             {
@@ -148,8 +159,9 @@ public sealed class AutoPhotoEditorApiClient
             }
 
             var maskNames = new List<string>();
+            var maskBinaryPngBase64 = new Dictionary<string, string>();
 
-            if (document.RootElement.TryGetProperty(
+            if (artifactData.TryGetProperty(
                     "masks",
                     out JsonElement masks) &&
                 masks.ValueKind == JsonValueKind.Object)
@@ -157,6 +169,12 @@ public sealed class AutoPhotoEditorApiClient
                 foreach (JsonProperty mask in masks.EnumerateObject())
                 {
                     maskNames.Add(mask.Name);
+
+                    if (mask.Value.TryGetProperty("binary_png_base64", out JsonElement binary) &&
+                        binary.ValueKind == JsonValueKind.String)
+                    {
+                        maskBinaryPngBase64[mask.Name] = binary.GetString() ?? string.Empty;
+                    }
                 }
             }
 
@@ -164,7 +182,8 @@ public sealed class AutoPhotoEditorApiClient
             {
                 JobId = jobId,
                 MaskJson = artifactData.Clone(),
-                MaskNames = maskNames
+                MaskNames = maskNames,
+                MaskBinaryPngBase64 = maskBinaryPngBase64
             };
         }
         catch (KeyNotFoundException ex)
@@ -835,13 +854,19 @@ public sealed class AutoPhotoEditorApiClient
         byte[] imageBytes,
         string jobId,
         Action<ApiJobEvent>? progress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool summaryOnly = false)
     {
         ValidateImageBytes(imageBytes);
 
         string url =
             "/auto-enhance-data?job_id=" +
             Uri.EscapeDataString(jobId);
+
+        if (summaryOnly)
+        {
+            url += "&summary=true";
+        }
 
         Task<string> requestTask =
             _http.PostBytesAsync(
@@ -895,6 +920,13 @@ public sealed class AutoPhotoEditorApiClient
         CancellationToken cancellationToken = default)
     {
         ValidateImageBytes(imageBytes);
+
+        if (!double.IsFinite(strength) || strength < 0.0 || strength > 2.0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(strength),
+                "Strength must be between 0 and 2.");
+        }
 
         if (analysis.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
         {

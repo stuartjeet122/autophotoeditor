@@ -1,0 +1,6 @@
+C:\Users\stuart\Desktop\image enhancer\AutoPhotoEditor\obj\validation\Debug\net8.0-windows\AutoPhotoEditor.csproj.AssemblyReference.cache
+C:\Users\stuart\Desktop\image enhancer\AutoPhotoEditor\obj\validation\Debug\net8.0-windows\MainWindow.baml
+C:\Users\stuart\Desktop\image enhancer\AutoPhotoEditor\obj\validation\Debug\net8.0-windows\MainWindow.g.cs
+C:\Users\stuart\Desktop\image enhancer\AutoPhotoEditor\obj\validation\Debug\net8.0-windows\App.g.cs
+C:\Users\stuart\Desktop\image enhancer\AutoPhotoEditor\obj\validation\Debug\net8.0-windows\AutoPhotoEditor_MarkupCompile.cache
+C:\Users\stuart\Desktop\image enhancer\AutoPhotoEditor\obj\validation\Debug\net8.0-windows\AutoPhotoEditor_MarkupCompile.lref

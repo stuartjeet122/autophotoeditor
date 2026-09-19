@@ -187,6 +187,9 @@ namespace AutoPhotoEditor.Api
 
         public IReadOnlyList<string> MaskNames { get; init; } = Array.Empty<string>();
 
+        public IReadOnlyDictionary<string, string> MaskBinaryPngBase64 { get; init; }
+            = new Dictionary<string, string>();
+
         public string MaskJsonText =>
             MaskJson.ValueKind == JsonValueKind.Undefined
                 ? string.Empty

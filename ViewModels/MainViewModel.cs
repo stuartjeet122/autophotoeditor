@@ -22,6 +22,8 @@ public partial class MainViewModel : ObservableObject
 
     private CancellationTokenSource? _processingCts;
 
+    private CancellationTokenSource? _imageDataPreloadCts;
+
     private string? _maskJsonForOriginal;
 
     private string? _analysisJsonForOriginal;
@@ -88,6 +90,9 @@ public partial class MainViewModel : ObservableObject
     private string statusMessage = "Ready";
 
     [ObservableProperty]
+    private BitmapImage? hoveredMaskImage;
+
+    [ObservableProperty]
     private bool isPreviewMode = true;
 
     [ObservableProperty]
@@ -117,60 +122,297 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private double manualSharpness;
 
+    private bool _synchronizingManualControls;
+
     partial void OnManualExposureChanged(double value)
     {
+        if (_synchronizingManualControls)
+            return;
+
         double clamped = ClampManualValue(value, -2.0, 2.0);
         if (Math.Abs(clamped - value) > 0.0001)
             ManualExposure = clamped;
+
+        _ = TriggerLivePreviewAsync(isManual: true);
     }
 
     partial void OnManualContrastChanged(double value)
     {
+        if (_synchronizingManualControls)
+            return;
+
         double clamped = ClampManualValue(value, -100.0, 100.0);
         if (Math.Abs(clamped - value) > 0.0001)
             ManualContrast = clamped;
+
+        _ = TriggerLivePreviewAsync(isManual: true);
     }
 
     partial void OnManualHighlightsChanged(double value)
     {
+        if (_synchronizingManualControls)
+            return;
+
         double clamped = ClampManualValue(value, -100.0, 100.0);
         if (Math.Abs(clamped - value) > 0.0001)
             ManualHighlights = clamped;
+
+        _ = TriggerLivePreviewAsync(isManual: true);
     }
 
     partial void OnManualShadowsChanged(double value)
     {
+        if (_synchronizingManualControls)
+            return;
+
         double clamped = ClampManualValue(value, -100.0, 100.0);
         if (Math.Abs(clamped - value) > 0.0001)
             ManualShadows = clamped;
+
+        _ = TriggerLivePreviewAsync(isManual: true);
     }
 
     partial void OnManualTemperatureChanged(double value)
     {
+        if (_synchronizingManualControls)
+            return;
+
         double clamped = ClampManualValue(value, -100.0, 100.0);
         if (Math.Abs(clamped - value) > 0.0001)
             ManualTemperature = clamped;
+
+        _ = TriggerLivePreviewAsync(isManual: true);
     }
 
     partial void OnManualTintChanged(double value)
     {
+        if (_synchronizingManualControls)
+            return;
+
         double clamped = ClampManualValue(value, -100.0, 100.0);
         if (Math.Abs(clamped - value) > 0.0001)
             ManualTint = clamped;
+
+        _ = TriggerLivePreviewAsync(isManual: true);
     }
 
     partial void OnManualSaturationChanged(double value)
     {
+        if (_synchronizingManualControls)
+            return;
+
         double clamped = ClampManualValue(value, -100.0, 100.0);
         if (Math.Abs(clamped - value) > 0.0001)
             ManualSaturation = clamped;
+
+        _ = TriggerLivePreviewAsync(isManual: true);
     }
 
     partial void OnManualSharpnessChanged(double value)
     {
+        if (_synchronizingManualControls)
+            return;
+
         double clamped = ClampManualValue(value, 0.0, 100.0);
         if (Math.Abs(clamped - value) > 0.0001)
             ManualSharpness = clamped;
+
+        _ = TriggerLivePreviewAsync(isManual: true);
+    }
+
+    partial void OnAutoEnhanceStrengthChanged(double value)
+    {
+        double clamped = ClampManualValue(value, 0.0, 2.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            AutoEnhanceStrength = clamped;
+
+        _ = TriggerLivePreviewAsync(isManual: false);
+    }
+
+    private CancellationTokenSource? _livePreviewCts;
+
+    private async Task TriggerLivePreviewAsync(bool isManual)
+    {
+        if (IsBusy)
+            return;
+
+        string? sourcePath = GetCurrentImagePath();
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+            return;
+
+        _livePreviewCts?.Cancel();
+        _livePreviewCts = new CancellationTokenSource();
+        CancellationToken token = _livePreviewCts.Token;
+
+        try
+        {
+            await Task.Delay(180, token);
+            if (token.IsCancellationRequested)
+                return;
+
+            if (isManual)
+                await ApplyManualPreviewAsync(token);
+            else
+                await ApplyAutoEnhancePreviewAsync(token);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception)
+        {
+        }
+    }
+
+    private async Task ApplyManualPreviewAsync(CancellationToken token)
+    {
+        string? sourcePath = OriginalImagePath;
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+            return;
+
+        IReadOnlyCollection<string>? selectedMasks =
+            ManualAdjustMask
+                ? ParseSelectedMaskNames()
+                : null;
+
+        if (ManualAdjustMask && (selectedMasks == null || selectedMasks.Count == 0))
+            return;
+
+        JsonElement maskJson = default;
+        if (ManualAdjustMask)
+        {
+            string? cachedMaskJson = GetReusableMaskJson();
+            if (string.IsNullOrWhiteSpace(cachedMaskJson))
+                return;
+
+            using JsonDocument maskDocument = JsonDocument.Parse(cachedMaskJson);
+            maskJson = maskDocument.RootElement.Clone();
+        }
+
+        var settings = new ManualAdjustmentSettings
+        {
+            Exposure = ManualExposure,
+            Contrast = ManualContrast,
+            Highlights = ManualHighlights,
+            Shadows = ManualShadows,
+            Temperature = ManualTemperature,
+            Tint = ManualTint,
+            Saturation = ManualSaturation,
+            Sharpness = ManualSharpness,
+            UseMask = ManualAdjustMask,
+            MaskJson = maskJson,
+            MaskNames = selectedMasks?.ToArray() ?? Array.Empty<string>(),
+            Feather = MaskedFeather
+        };
+
+        string apiInputPath = await PrepareApiInputAsync(sourcePath, token);
+        byte[] imageBytes = await File.ReadAllBytesAsync(apiInputPath, token);
+
+        AutoEnhanceApiResult result = await _api.ManualAdjustAsync(
+            imageBytes,
+            settings,
+            jobId: Guid.NewGuid().ToString("N"),
+            cancellationToken: token);
+
+        token.ThrowIfCancellationRequested();
+
+        string outputPath = Path.Combine(
+            Path.GetTempPath(),
+            "AutoPhotoEditor",
+            "LivePreview",
+            $"{Guid.NewGuid():N}_manual.png");
+
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        await File.WriteAllBytesAsync(outputPath, result.ImageBytes, token);
+        SetEditedImage(outputPath);
+        ComparisonPosition = 50;
+    }
+
+    private async Task ApplyAutoEnhancePreviewAsync(CancellationToken token)
+    {
+        string? sourcePath = GetCurrentImagePath();
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+            return;
+
+        string apiInputPath = await PrepareApiInputAsync(sourcePath, token);
+        byte[] imageBytes = await File.ReadAllBytesAsync(apiInputPath, token);
+
+        string jobId = Guid.NewGuid().ToString("N");
+        AutoEnhanceDataResult analysisResult = await _api.AutoEnhanceDataAsync(
+            imageBytes,
+            jobId,
+            cancellationToken: token,
+            summaryOnly: false);
+
+        token.ThrowIfCancellationRequested();
+
+        AutoEnhanceApiResult result = await _api.AutoEnhanceAsync(
+            imageBytes,
+            analysisResult.Analysis,
+            strength: AutoEnhanceStrength,
+            jobId: Guid.NewGuid().ToString("N"),
+            cancellationToken: token);
+
+        token.ThrowIfCancellationRequested();
+
+        string outputPath = Path.Combine(
+            Path.GetTempPath(),
+            "AutoPhotoEditor",
+            "LivePreview",
+            $"{Guid.NewGuid():N}_auto.png");
+
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        await File.WriteAllBytesAsync(outputPath, result.ImageBytes, token);
+        SetEditedImage(outputPath);
+        ComparisonPosition = 50;
+    }
+
+    partial void OnMaskedStrengthChanged(double value)
+    {
+        double clamped = ClampManualValue(value, 0.0, 1.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            MaskedStrength = clamped;
+    }
+
+    partial void OnMaskedFeatherChanged(double value)
+    {
+        double clamped = ClampManualValue(value, 0.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            MaskedFeather = clamped;
+    }
+
+    partial void OnGeometryScaleChanged(double value)
+    {
+        double clamped = ClampManualValue(value, 0.01, 1000.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            GeometryScale = clamped;
+    }
+
+    partial void OnLensStrengthChanged(double value)
+    {
+        double clamped = ClampManualValue(value, 0.0, 1.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            LensStrength = clamped;
+    }
+
+    partial void OnLensCenterXChanged(double value)
+    {
+        double clamped = ClampManualValue(value, 0.0, 1.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            LensCenterX = clamped;
+    }
+
+    partial void OnLensCenterYChanged(double value)
+    {
+        double clamped = ClampManualValue(value, 0.0, 1.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            LensCenterY = clamped;
+    }
+
+    partial void OnLensFocalScaleChanged(double value)
+    {
+        double clamped = ClampManualValue(value, 0.01, 100.0);
+        if (Math.Abs(clamped - value) > 0.0001)
+            LensFocalScale = clamped;
     }
 
     private static double ClampManualValue(
@@ -184,6 +426,44 @@ public partial class MainViewModel : ObservableObject
                 : minimum <= 0.0 && maximum >= 0.0
                     ? 0.0
                     : minimum;
+    }
+
+    private static double ClampAutoEnhanceStrength(double value)
+    {
+        return Math.Clamp(double.IsFinite(value) ? Math.Abs(value) : 0.0, 0.0, 2.0);
+    }
+
+    private static (double LuminosityRecommendedEv, double NeutralConfidence)? TryGetBestEnhancement(JsonElement analysis)
+    {
+        if (analysis.ValueKind != JsonValueKind.Object)
+            return null;
+
+        if (!analysis.TryGetProperty("best_enhancement", out JsonElement bestEnhancement) ||
+            bestEnhancement.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        if (!bestEnhancement.TryGetProperty("luminosity", out JsonElement luminosity) ||
+            luminosity.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        double luminosityChange = 0.0;
+        if (luminosity.TryGetProperty("recommended_change_ev", out JsonElement ev) && ev.ValueKind == JsonValueKind.Number)
+            luminosityChange = ev.GetDouble();
+
+        double neutralConfidence = 0.0;
+        if (bestEnhancement.TryGetProperty("neutral_tone", out JsonElement neutralTone) &&
+            neutralTone.ValueKind == JsonValueKind.Object &&
+            neutralTone.TryGetProperty("confidence", out JsonElement confidence) &&
+            confidence.ValueKind == JsonValueKind.Number)
+        {
+            neutralConfidence = confidence.GetDouble();
+        }
+
+        return (luminosityChange, neutralConfidence);
     }
 
     [ObservableProperty]
@@ -209,6 +489,7 @@ public partial class MainViewModel : ObservableObject
                 !string.IsNullOrWhiteSpace(value))
             {
                 SelectedMaskNamesText = value;
+                ApplySelectedMaskRecommendation(value);
             }
         }
     }
@@ -297,6 +578,72 @@ public partial class MainViewModel : ObservableObject
 
     public ObservableCollection<string> AvailableMaskNames { get; } = new();
 
+    public ObservableCollection<MaskOption> MaskOptions { get; } = new();
+
+    public void SetHoveredMask(MaskOption? option)
+    {
+        if (option == null || string.IsNullOrWhiteSpace(option.BinaryPngBase64))
+        {
+            HoveredMaskImage = null;
+            return;
+        }
+
+        try
+        {
+            byte[] bytes = Convert.FromBase64String(option.BinaryPngBase64);
+            using var stream = new MemoryStream(bytes);
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.StreamSource = stream;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            HoveredMaskImage = bitmap;
+        }
+        catch (FormatException)
+        {
+            HoveredMaskImage = null;
+        }
+    }
+
+    private void ApplySelectedMaskRecommendation(string maskName)
+    {
+        string? maskJson = GetReusableMaskJson();
+        if (string.IsNullOrWhiteSpace(maskJson))
+            return;
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(maskJson);
+            if (!document.RootElement.TryGetProperty("masks", out JsonElement masks) ||
+                masks.ValueKind != JsonValueKind.Object ||
+                !masks.TryGetProperty(maskName, out JsonElement mask) ||
+                !mask.TryGetProperty("enhancement", out JsonElement enhancement) ||
+                enhancement.ValueKind != JsonValueKind.Object ||
+                !enhancement.TryGetProperty("adjustments", out JsonElement adjustments))
+            {
+                return;
+            }
+
+            _synchronizingManualControls = true;
+            ManualExposure = GetNumber(adjustments, "exposure", 0.0);
+            ManualContrast = GetNumber(adjustments, "contrast", 0.0);
+            ManualHighlights = GetNumber(adjustments, "highlights", 0.0);
+            ManualShadows = GetNumber(adjustments, "shadows", 0.0);
+            ManualTemperature = GetNumber(adjustments, "temperature", 0.0);
+            ManualTint = GetNumber(adjustments, "tint", 0.0);
+            ManualSaturation = GetNumber(adjustments, "saturation", 0.0);
+            ManualSharpness = GetNumber(adjustments, "clarity", 0.0);
+        }
+        catch (JsonException)
+        {
+        }
+        finally
+        {
+            _synchronizingManualControls = false;
+        }
+    }
+
 
     // ================================================================
     // COMPARISON
@@ -380,7 +727,10 @@ public partial class MainViewModel : ObservableObject
     private void ShowBefore()
     {
         if (OriginalImage == null)
+        {
+            StatusMessage = "Choose an image first.";
             return;
+        }
 
         ComparisonPosition = 0;
     }
@@ -394,7 +744,10 @@ public partial class MainViewModel : ObservableObject
     private void ShowAfter()
     {
         if (EditedImage == null)
+        {
+            StatusMessage = "Apply an edit before showing the after image.";
             return;
+        }
 
         ComparisonPosition = 100;
     }
@@ -481,6 +834,8 @@ public partial class MainViewModel : ObservableObject
             SelectedMaskNamesText = string.Empty;
             SelectedMaskName = null;
             ManualAdjustMask = false;
+            MaskOptions.Clear();
+            HoveredMaskImage = null;
 
 
             // --------------------------------------------------------
@@ -491,6 +846,7 @@ public partial class MainViewModel : ObservableObject
 
 
             StatusMessage = "Image loaded.";
+            _ = PreloadImageDataAsync(path);
         }
         catch (Exception ex)
         {
@@ -503,6 +859,53 @@ public partial class MainViewModel : ObservableObject
     // ================================================================
     // AUTO ENHANCE
     // ================================================================
+
+    private async Task PreloadImageDataAsync(string imagePath)
+    {
+        _imageDataPreloadCts?.Cancel();
+        _imageDataPreloadCts?.Dispose();
+        _imageDataPreloadCts = new CancellationTokenSource();
+        CancellationToken token = _imageDataPreloadCts.Token;
+
+        try
+        {
+            string apiInputPath = await PrepareApiInputAsync(imagePath, token);
+            byte[] analysisBytes = await File.ReadAllBytesAsync(apiInputPath, token);
+            byte[] maskBytes = await File.ReadAllBytesAsync(imagePath, token);
+
+            Task<AutoEnhanceDataResult> analysisTask = _api.AutoEnhanceDataAsync(
+                analysisBytes,
+                Guid.NewGuid().ToString("N"),
+                cancellationToken: token,
+                summaryOnly: false);
+            Task<MaskDataResult> maskTask = _api.MaskDataAsync(
+                maskBytes,
+                Guid.NewGuid().ToString("N"),
+                cancellationToken: token,
+                device: MaskDevice);
+
+            await Task.WhenAll(analysisTask, maskTask);
+            token.ThrowIfCancellationRequested();
+
+            if (!string.Equals(OriginalImagePath, imagePath, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            AutoEnhanceDataResult analysisResult = await analysisTask;
+            MaskDataResult maskResult = await maskTask;
+            _analysisJsonForOriginal = analysisResult.AnalysisJson;
+            _maskJsonForOriginal = maskResult.MaskJsonText;
+            UpdateMaskOptions(maskResult.MaskNames, maskResult.MaskBinaryPngBase64);
+            StatusMessage = "Image loaded. AI data ready.";
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch
+        {
+            if (string.Equals(OriginalImagePath, imagePath, StringComparison.OrdinalIgnoreCase))
+                StatusMessage = "Image loaded. AI data will be fetched when needed.";
+        }
+    }
 
     [RelayCommand]
     private async Task AutoEnhanceAsync()
@@ -565,15 +968,35 @@ public partial class MainViewModel : ObservableObject
             StatusMessage =
                 "Analysing image...";
 
-            var analysisResult =
-                await _api.AutoEnhanceDataAsync(
+            JsonElement analysis;
+            if (string.Equals(sourcePath, OriginalImagePath, StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(_analysisJsonForOriginal))
+            {
+                using JsonDocument cachedAnalysis = JsonDocument.Parse(_analysisJsonForOriginal);
+                analysis = cachedAnalysis.RootElement.Clone();
+            }
+            else
+            {
+                var summaryResult = await _api.AutoEnhanceDataAsync(
+                    imageBytes,
+                    Guid.NewGuid().ToString("N"),
+                    OnApiProgress,
+                    token,
+                    summaryOnly: true);
+
+                token.ThrowIfCancellationRequested();
+
+                var bestEnhancement = TryGetBestEnhancement(summaryResult.Analysis);
+                if (bestEnhancement != null)
+                    AutoEnhanceStrength = ClampAutoEnhanceStrength(bestEnhancement.Value.LuminosityRecommendedEv);
+
+                var analysisResult = await _api.AutoEnhanceDataAsync(
                     imageBytes,
                     jobId,
                     OnApiProgress,
                     token);
-
-            token.ThrowIfCancellationRequested();
-
+                analysis = analysisResult.Analysis;
+            }
 
             // --------------------------------------------------------
             // ENHANCE
@@ -585,7 +1008,7 @@ public partial class MainViewModel : ObservableObject
             var result =
                 await _api.AutoEnhanceAsync(
                     imageBytes,
-                    analysisResult.Analysis,
+                    analysis,
                     strength: AutoEnhanceStrength,
                     jobId,
                     OnApiProgress,
@@ -627,6 +1050,8 @@ public partial class MainViewModel : ObservableObject
             // --------------------------------------------------------
 
             SetEditedImage(outputFile);
+            string analysisJson = analysis.GetRawText();
+            ApplyAutoAnalysisSettings(analysisJson);
 
 
             AddHistory(
@@ -636,7 +1061,7 @@ public partial class MainViewModel : ObservableObject
                 {
                     strength = AutoEnhanceStrength
                 }),
-                analysisJson: analysisResult.AnalysisJson);
+                analysisJson: analysisJson);
 
 
             ComparisonPosition = 50;
@@ -770,8 +1195,9 @@ public partial class MainViewModel : ObservableObject
                 _maskJsonForOriginal =
                     maskJson;
 
-                UpdateAvailableMaskNames(
-                    maskResult.MaskNames);
+                UpdateMaskOptions(
+                    maskResult.MaskNames,
+                    maskResult.MaskBinaryPngBase64);
             }
 
 
@@ -780,8 +1206,14 @@ public partial class MainViewModel : ObservableObject
 
             if (AvailableMaskNames.Count == 0)
             {
-                UpdateAvailableMaskNames(
-                    GetMaskNames(maskDocument.RootElement));
+                UpdateMaskOptions(maskDocument.RootElement);
+            }
+
+            IReadOnlyCollection<string>? selectedMaskNames = ParseSelectedMaskNames();
+            if (selectedMaskNames == null || selectedMaskNames.Count == 0)
+            {
+                StatusMessage = "Choose at least one mask before enhancing.";
+                return;
             }
 
 
@@ -799,7 +1231,7 @@ public partial class MainViewModel : ObservableObject
                     maskDocument.RootElement,
                     strength: MaskedStrength,
                     feather: MaskedFeather,
-                    maskNames: ParseSelectedMaskNames(),
+                    maskNames: selectedMaskNames,
                     jobId: jobId,
                     progress: OnApiProgress,
                     cancellationToken: token);
@@ -850,13 +1282,15 @@ public partial class MainViewModel : ObservableObject
                 {
                     strength = MaskedStrength,
                     feather = MaskedFeather,
-                    mask_names = ParseSelectedMaskNames() ?? Array.Empty<string>(),
+                    mask_names = selectedMaskNames,
                     mask_report = result.MaskReport.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null
                         ? null
                         : (object)result.MaskReport
                 }),
                 isMaskScoped: true,
-                maskNames: ParseSelectedMaskNames());
+                maskNames: selectedMaskNames);
+
+            RemoveEnhancedMasks(selectedMaskNames);
 
 
             ComparisonPosition = 50;
@@ -962,7 +1396,8 @@ public partial class MainViewModel : ObservableObject
             settingsJson: settingsJson,
             maskJson: ManualAdjustMask ? maskJson.GetRawText() : null,
             maskNames: selectedMasks,
-            isMaskScoped: ManualAdjustMask);
+            isMaskScoped: ManualAdjustMask,
+            useOriginalImage: true);
     }
 
 
@@ -1240,8 +1675,9 @@ public partial class MainViewModel : ObservableObject
             _maskJsonForOriginal =
                 result.MaskJsonText;
 
-            UpdateAvailableMaskNames(
-                result.MaskNames);
+            UpdateMaskOptions(
+                result.MaskNames,
+                result.MaskBinaryPngBase64);
 
             StatusMessage =
                 AvailableMaskNames.Count == 0
@@ -1404,10 +1840,13 @@ public partial class MainViewModel : ObservableObject
         string? analysisJson = null,
         string? maskJson = null,
         IReadOnlyCollection<string>? maskNames = null,
-        bool isMaskScoped = false)
+        bool isMaskScoped = false,
+        bool useOriginalImage = false)
     {
         string? sourcePath =
-            GetCurrentImagePath();
+            useOriginalImage
+                ? OriginalImagePath
+                : GetCurrentImagePath();
 
         if (string.IsNullOrWhiteSpace(sourcePath) ||
             !File.Exists(sourcePath))
@@ -1505,23 +1944,90 @@ public partial class MainViewModel : ObservableObject
     }
 
 
-    private void UpdateAvailableMaskNames(
-        IEnumerable<string> maskNames)
+    private void UpdateMaskOptions(
+        IEnumerable<string> maskNames,
+        IReadOnlyDictionary<string, string>? binaryPngs = null)
     {
+        foreach (MaskOption option in MaskOptions)
+            option.PropertyChanged -= MaskOption_PropertyChanged;
+
+        MaskOptions.Clear();
         AvailableMaskNames.Clear();
 
         foreach (string maskName in maskNames)
         {
             if (string.IsNullOrWhiteSpace(maskName) ||
-                AvailableMaskNames.Contains(maskName))
+                MaskOptions.Any(option => string.Equals(option.Name, maskName, StringComparison.OrdinalIgnoreCase)))
             {
                 continue;
             }
 
-            AvailableMaskNames.Add(
-                maskName);
+            string? binaryPng = null;
+            binaryPngs?.TryGetValue(maskName, out binaryPng);
+            var option = new MaskOption(maskName, binaryPng);
+            option.PropertyChanged += MaskOption_PropertyChanged;
+            MaskOptions.Add(option);
+            AvailableMaskNames.Add(maskName);
         }
 
+        OnPropertyChanged(nameof(HasAvailableMasks));
+    }
+
+    private void UpdateMaskOptions(JsonElement maskJson)
+    {
+        if (maskJson.ValueKind != JsonValueKind.Object ||
+            !maskJson.TryGetProperty("masks", out JsonElement masks) ||
+            masks.ValueKind != JsonValueKind.Object)
+        {
+            UpdateMaskOptions(Array.Empty<string>());
+            return;
+        }
+
+        var names = new List<string>();
+        var binaryPngs = new Dictionary<string, string>();
+        foreach (JsonProperty mask in masks.EnumerateObject())
+        {
+            names.Add(mask.Name);
+            if (mask.Value.TryGetProperty("binary_png_base64", out JsonElement binary) &&
+                binary.ValueKind == JsonValueKind.String)
+            {
+                binaryPngs[mask.Name] = binary.GetString() ?? string.Empty;
+            }
+        }
+
+        UpdateMaskOptions(names, binaryPngs);
+    }
+
+    private void MaskOption_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(MaskOption.IsSelected))
+            return;
+
+        string[] selectedNames = MaskOptions
+            .Where(option => option.IsSelected)
+            .Select(option => option.Name)
+            .ToArray();
+
+        SelectedMaskNamesText = string.Join(", ", selectedNames);
+        SelectedMaskName = selectedNames.FirstOrDefault();
+        if (SelectedMaskName != null)
+            ApplySelectedMaskRecommendation(SelectedMaskName);
+    }
+
+    private void RemoveEnhancedMasks(IEnumerable<string> maskNames)
+    {
+        var enhancedNames = new HashSet<string>(maskNames, StringComparer.OrdinalIgnoreCase);
+        foreach (MaskOption option in MaskOptions
+                     .Where(option => enhancedNames.Contains(option.Name))
+                     .ToList())
+        {
+            option.PropertyChanged -= MaskOption_PropertyChanged;
+            MaskOptions.Remove(option);
+            AvailableMaskNames.Remove(option.Name);
+        }
+
+        SelectedMaskNamesText = string.Empty;
+        SelectedMaskName = null;
         OnPropertyChanged(nameof(HasAvailableMasks));
     }
 
@@ -1553,6 +2059,14 @@ public partial class MainViewModel : ObservableObject
 
     private IReadOnlyCollection<string>? ParseSelectedMaskNames()
     {
+        string[] checkedNames = MaskOptions
+            .Where(option => option.IsSelected)
+            .Select(option => option.Name)
+            .ToArray();
+
+        if (checkedNames.Length > 0)
+            return checkedNames;
+
         if (string.IsNullOrWhiteSpace(SelectedMaskNamesText))
         {
             return string.IsNullOrWhiteSpace(SelectedMaskName)
@@ -2382,22 +2896,48 @@ public partial class MainViewModel : ObservableObject
         try
         {
             using JsonDocument document = JsonDocument.Parse(analysisJson);
-            if (!document.RootElement.TryGetProperty("recommendations", out JsonElement recommendations) ||
-                recommendations.ValueKind != JsonValueKind.Object)
-            {
-                return;
-            }
 
-            ManualExposure = GetNestedNumber(recommendations, "exposure_ev", "value", 0.0);
-            ManualContrast = GetNumber(recommendations, "contrast", 0.0);
-            ManualHighlights = GetNumber(recommendations, "highlights", 0.0);
-            ManualShadows = GetNumber(recommendations, "shadows", 0.0);
-            ManualTemperature = GetNestedNumber(recommendations, "temperature", "value", 0.0);
-            ManualTint = GetNestedNumber(recommendations, "tint", "value", 0.0);
+            JsonElement root = document.RootElement;
+            JsonElement recommendations = root.TryGetProperty("recommendations", out JsonElement recommendationValue) &&
+                                           recommendationValue.ValueKind == JsonValueKind.Object
+                ? recommendationValue
+                : default;
+            JsonElement plan = root.TryGetProperty("correction_plan", out JsonElement planValue) &&
+                               planValue.ValueKind == JsonValueKind.Object
+                ? planValue
+                : default;
+            JsonElement light = plan.ValueKind == JsonValueKind.Object &&
+                                plan.TryGetProperty("light", out JsonElement lightValue) &&
+                                lightValue.ValueKind == JsonValueKind.Object
+                ? lightValue
+                : default;
+            JsonElement color = plan.ValueKind == JsonValueKind.Object &&
+                                plan.TryGetProperty("color", out JsonElement colorValue) &&
+                                colorValue.ValueKind == JsonValueKind.Object
+                ? colorValue
+                : default;
+            JsonElement whiteBalance = plan.ValueKind == JsonValueKind.Object &&
+                                       plan.TryGetProperty("white_balance", out JsonElement whiteBalanceValue) &&
+                                       whiteBalanceValue.ValueKind == JsonValueKind.Object
+                ? whiteBalanceValue
+                : default;
+
+            _synchronizingManualControls = true;
+            ManualExposure = GetNumber(plan, "exposure_ev", GetNestedNumber(recommendations, "exposure_ev", "value", 0.0));
+            ManualContrast = GetNumber(light, "contrast", GetNumber(recommendations, "contrast", 0.0));
+            ManualHighlights = GetNumber(light, "highlights", GetNumber(recommendations, "highlights", 0.0));
+            ManualShadows = GetNumber(light, "shadows", GetNumber(recommendations, "shadows", 0.0));
+            ManualTemperature = GetNumber(whiteBalance, "temperature_cast", GetNestedNumber(recommendations, "temperature", "value", 0.0));
+            ManualTint = GetNumber(whiteBalance, "tint_cast", GetNestedNumber(recommendations, "tint", "value", 0.0));
+            ManualSaturation = GetNumber(color, "saturation", 0.0);
             ManualSharpness = GetNestedNumber(recommendations, "sharpen", "value", 0.0);
         }
         catch (JsonException)
         {
+        }
+        finally
+        {
+            _synchronizingManualControls = false;
         }
     }
 

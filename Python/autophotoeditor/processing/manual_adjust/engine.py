@@ -89,8 +89,10 @@ def _apply_tonal_adjustments(
 	result += highlights * highlight_weight[:, :, None] * 0.28
 
 	shadows = adjustments["shadows"] / 100.0
-	shadow_weight = np.clip((0.55 - luminance) / 0.55, 0.0, 1.0)
-	result += shadows * shadow_weight[:, :, None] * 0.28
+	shadow_weight = np.clip((0.48 - luminance) / 0.48, 0.0, 1.0)
+	shadow_weight = shadow_weight ** 1.45
+	shadow_headroom = np.clip((0.78 - luminance) / 0.78, 0.0, 1.0)
+	result += shadows * shadow_weight[:, :, None] * shadow_headroom[:, :, None] * 0.16
 
 	return np.clip(result, 0.0, 1.0)
 
@@ -181,6 +183,9 @@ def apply_masked(
 		sigma = max(radius / 2.0, 0.5)
 		weight = cv2.GaussianBlur(weight, (0, 0), sigma)
 		weight = np.clip(weight, 0.0, 1.0)
+		# Feather the edge without allowing the adjustment to leak into the
+		# untouched part of the image.
+		weight *= (mask > 0.01).astype(np.float32)
 
 	blended = (
 		image.astype(np.float32) * (1.0 - weight[:, :, None])

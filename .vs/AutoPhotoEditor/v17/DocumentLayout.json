@@ -3,12 +3,12 @@
   "WorkspaceRootPath": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\viewmodels\\mainviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:viewmodels\\mainviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|solutionrelative:mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{3FE04A66-1568-435B-B04D-73A69E3EF5F9}|AutoPhotoEditor.csproj|c:\\users\\stuart\\desktop\\image enhancer\\autophotoeditor\\models\\photoeditjob.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -66,7 +66,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -98,26 +98,26 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "MainViewModel.cs",
               "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\ViewModels\\MainViewModel.cs",
               "RelativeDocumentMoniker": "ViewModels\\MainViewModel.cs",
               "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\ViewModels\\MainViewModel.cs",
               "RelativeToolTip": "ViewModels\\MainViewModel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAG0EAAAAAAAAAAAEwH8EAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-15T16:56:16.872Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "MainWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\MainWindow.xaml.cs",
               "RelativeDocumentMoniker": "MainWindow.xaml.cs",
               "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\MainWindow.xaml.cs",
               "RelativeToolTip": "MainWindow.xaml.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAB8AAAAAAAAAAAAkwDoAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-15T18:30:49.825Z",
               "EditorCaption": ""
@@ -189,7 +189,7 @@
               "RelativeDocumentMoniker": "Api\\AutoPhotoEditorApiClient.cs",
               "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\Api\\AutoPhotoEditorApiClient.cs",
               "RelativeToolTip": "Api\\AutoPhotoEditorApiClient.cs",
-              "ViewState": "AgIAAPYBAAAAAAAAAAAswA8CAAAIAAAAAAAAAA==",
+              "ViewState": "AgIAAP4BAAAAAAAAAAAswBcCAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-15T16:49:00.644Z",
               "EditorCaption": ""

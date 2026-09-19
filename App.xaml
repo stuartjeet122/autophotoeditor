@@ -8,7 +8,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <!-- Loads the Light or Dark theme styles -->
-                <ui:ThemesDictionary Theme="Light" />
+                <ui:ThemesDictionary Theme="Dark" />
                 <!-- Loads the styles for all WPF UI controls -->
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
