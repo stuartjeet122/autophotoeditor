@@ -826,42 +826,64 @@ def derive_lightroom_tone_controls(
     highlight_clip = stats.highlight_clip
     tonal_width = max(0.0, stats.p90 - stats.p10)
 
+    # Use percentile-based tonal separation instead of dark-pixel fraction as a
+    # proxy for clipping. Dark regions are common in contrasty scenes and do not
+    # automatically imply actual black clipping or a need for a strong shadow
+    # lift.
+    dark_midtone_pressure = clamp(
+        (0.17 - stats.p25) * 2.0,
+        -0.75,
+        0.75,
+    )
+    deep_shadow_pressure = clamp(
+        (0.20 - stats.p05) * 2.4,
+        -0.70,
+        0.70,
+    )
+    bright_region_pressure = clamp(
+        (stats.p95 - 0.78) * 2.2,
+        -0.75,
+        0.75,
+    )
+
     contrast = clamp(
-        (median - 0.18) * 2.5 + ev * 0.25,
-        -1.5,
-        1.5,
+        (median - 0.18) * 1.5 + ev * 0.12,
+        -0.80,
+        0.80,
     )
 
     highlights = clamp(
-        (highlight_clip - 0.012) * 26.0 - ev * 0.30,
-        -1.5,
-        1.5,
+        bright_region_pressure - ev * 0.10,
+        -0.80,
+        0.80,
     )
 
     shadows = clamp(
-        (shadow_clip - 0.035) * 26.0 + ev * 0.35,
-        -1.5,
-        1.5,
+        dark_midtone_pressure + ev * 0.08,
+        -0.80,
+        0.80,
     )
 
     whites = clamp(
-        (stats.p95 - 0.72) * 5.0 + ev * 0.20,
-        -1.5,
-        1.5,
+        (stats.p95 - 0.72) * 1.6 + ev * 0.10,
+        -0.80,
+        0.80,
     )
 
     blacks = clamp(
-        (0.20 - stats.p05) * 6.0 - ev * 0.20,
-        -1.5,
-        1.5,
+        deep_shadow_pressure - ev * 0.08,
+        -0.80,
+        0.80,
     )
 
+    # Keep the conservative scene-specific scaling, but do not allow these
+    # values to become aggressive in mixed-brightness imagery.
     if scene_type.lower() in {"night", "low_light", "dark"}:
-        shadows = clamp(shadows * 1.25, -1.5, 1.5)
-        blacks = clamp(blacks * 1.15, -1.5, 1.5)
+        shadows = clamp(shadows * 1.15, -0.80, 0.80)
+        blacks = clamp(blacks * 1.10, -0.80, 0.80)
     elif scene_type.lower() in {"snow", "beach", "high_key", "bright"}:
-        highlights = clamp(highlights * 1.25, -1.5, 1.5)
-        whites = clamp(whites * 1.15, -1.5, 1.5)
+        highlights = clamp(highlights * 1.10, -0.80, 0.80)
+        whites = clamp(whites * 1.10, -0.80, 0.80)
 
     return {
         "contrast": round(
@@ -978,6 +1000,17 @@ def derive_exposure_recommendation(
         )
     )
 
+    # High-contrast scenes with substantial dark and bright regions are not
+    # automatically underexposed or overexposed. A strong global exposure shift
+    # can easily destroy the bright regions while flattening the subject. Keep
+    # such scenes near neutral unless the objective improvement is clearly
+    # meaningful.
+    mixed_dynamic_range = (
+        original.p05 < 0.12
+        and original.p95 > 0.82
+        and original.dynamic_range > 0.52
+    )
+
     adjusted_y = apply_exposure_linear(
         y_sample,
         best_ev,
@@ -1037,6 +1070,12 @@ def derive_exposure_recommendation(
             0.20,
         )
 
+        decision = "hold"
+
+    if mixed_dynamic_range and abs(best_ev) < 0.12:
+        best_ev = 0.0
+        adjusted = original
+        confidence = min(confidence, 0.20)
         decision = "hold"
 
     # ------------------------------------------------------------
