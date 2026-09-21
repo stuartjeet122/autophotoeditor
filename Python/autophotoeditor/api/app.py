@@ -19,6 +19,8 @@ from fastapi import (
     HTTPException,
     Query,
     Request,
+    WebSocket,
+    WebSocketDisconnect,
 )
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -33,6 +35,54 @@ from autophotoeditor.core.image_io import (
     result,
     save_json,
 )
+
+
+# ============================================================
+# DESKTOP CONNECTION
+# ============================================================
+
+@app.websocket("/ws")
+async def desktop_connection(websocket: WebSocket) -> None:
+    """Keep an externally managed desktop client connected and informed."""
+    await websocket.accept()
+
+    try:
+        await websocket.send_json(
+            {
+                "type": "hello",
+                "service": "autophotoeditor",
+                "status": "ok",
+            }
+        )
+
+        while True:
+            message = await websocket.receive_json()
+            message_type = message.get("type")
+
+            if message_type == "ping":
+                await websocket.send_json(
+                    {
+                        "type": "pong",
+                        "timestamp": message.get("timestamp"),
+                    }
+                )
+            elif message_type == "hello":
+                await websocket.send_json(
+                    {
+                        "type": "hello",
+                        "service": "autophotoeditor",
+                        "status": "ok",
+                    }
+                )
+            else:
+                await websocket.send_json(
+                    {
+                        "type": "error",
+                        "message": "Unsupported WebSocket message type.",
+                    }
+                )
+    except WebSocketDisconnect:
+        return
 from autophotoeditor.models.pipeline import PipelineStage
 from autophotoeditor.processing import (
     ai_denoise,
@@ -348,12 +398,29 @@ def _mask_json_artifact(
             if not isinstance(item, dict):
                 continue
 
-            binary_path = (
-                binary_dir
-                / f"{name}.png"
-            )
+            binary_path = None
 
-            if binary_path.is_file():
+            binary_reference = item.get("binary_file")
+            if isinstance(binary_reference, str) and binary_reference.strip():
+                reference_name = Path(binary_reference).name
+                candidates = (
+                    mask_json.parent / reference_name,
+                    binary_dir / reference_name,
+                )
+                binary_path = next(
+                    (
+                        candidate
+                        for candidate in candidates
+                        if candidate.is_file()
+                    ),
+                    None,
+                )
+
+            if binary_path is None:
+                fallback = binary_dir / f"{name}.png"
+                binary_path = fallback if fallback.is_file() else None
+
+            if binary_path is not None:
                 item["binary_encoding"] = "base64"
 
                 item["binary_png_base64"] = (
@@ -739,7 +806,7 @@ def auto_enhance_route(
     strength: float = Query(
         1.0,
         ge=0.0,
-        le=2.0,
+        le=1.0,
     ),
     job_id: Optional[str] = Query(
         None,
@@ -2239,7 +2306,7 @@ def auto_enhance_api(
     strength: float = Query(
         1.0,
         ge=0.0,
-        le=2.0,
+        le=1.0,
     ),
     job_id: Optional[str] = Query(None),
 ) -> dict[str, Any]:
@@ -2823,7 +2890,7 @@ def binary_auto_enhance(
     strength: float = Query(
         1.0,
         ge=0.0,
-        le=2.0,
+        le=1.0,
     ),
     job_id: Optional[str] = Query(None),
 ) -> dict[str, Any]:

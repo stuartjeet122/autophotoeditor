@@ -2,57 +2,47 @@
 using AutoPhotoEditor.Api;
 using AutoPhotoEditor.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace AutoPhotoEditor
 {
     public partial class App : Application
     {
-        private readonly IHost _host;
+        private readonly ServiceProvider _services;
 
         public static IServiceProvider Services { get; private set; } = null!;
 
 
         public App()
         {
-            _host = Host.CreateDefaultBuilder()
-                .ConfigureServices((context, services) =>
-                {
+            var services = new ServiceCollection();
 
-                    services.AddSingleton<AutoPhotoEditorApiConfig>();
+            services.AddSingleton<AutoPhotoEditorApiConfig>();
+            services.AddSingleton<ApiHttpHelper>();
+            services.AddSingleton<AutoPhotoEditorApiClient>();
+            services.AddSingleton<ApiWebSocketConnection>();
+            services.AddTransient<MainViewModel>();
+            services.AddTransient<MainWindow>();
 
-                    services.AddSingleton<ApiHttpHelper>();
-
-                    services.AddSingleton<AutoPhotoEditorApiClient>();
-
-                    // ViewModels
-                    services.AddTransient<MainViewModel>();
-
-                    // Views
-                    services.AddTransient<MainWindow>();
-                })
-                .Build();
-
-            Services = _host.Services;
+            _services = services.BuildServiceProvider();
+            Services = _services;
         }
 
-        protected override async void OnStartup(StartupEventArgs e)
+        protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
             try
             {
-                await _host.StartAsync();
-
                 var mainWindow =
                     Services.GetRequiredService<MainWindow>();
 
+                MainWindow = mainWindow;
                 mainWindow.Show();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"AutoPhotoEditor API failed to start.\n\n" +
+                    $"AutoPhotoEditor could not start.\n\n" +
                     $"{ex.Message}",
                     "AutoPhotoEditor",
                     MessageBoxButton.OK,
@@ -65,9 +55,13 @@ namespace AutoPhotoEditor
 
         protected override async void OnExit(ExitEventArgs e)
         {
-            await _host.StopAsync();
+            ApiWebSocketConnection? connection =
+                Services.GetService<ApiWebSocketConnection>();
 
-            _host.Dispose();
+            if (connection != null)
+                await connection.DisposeAsync();
+
+            _services.Dispose();
 
             base.OnExit(e);
         }

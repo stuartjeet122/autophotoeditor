@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AutoPhotoEditor")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+980e47042e0764a508c66f06bd0cc951feebb6a7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2f2346c5ad52a9e38ce683b867132866366f03fb")]
 [assembly: System.Reflection.AssemblyProductAttribute("AutoPhotoEditor")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AutoPhotoEditor")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

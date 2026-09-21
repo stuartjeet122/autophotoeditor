@@ -1,0 +1,25 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="WindowBackground" Color="#0B0F14" />
+    <SolidColorBrush x:Key="Surface" Color="#141A22" />
+    <SolidColorBrush x:Key="SurfaceRaised" Color="#1B2430" />
+    <SolidColorBrush x:Key="SurfaceHover" Color="#263447" />
+    <SolidColorBrush x:Key="Line" Color="#2C394B" />
+    <SolidColorBrush x:Key="TextPrimary" Color="#F7F9FC" />
+    <SolidColorBrush x:Key="TextSecondary" Color="#A6B2C3" />
+    <SolidColorBrush x:Key="TextMuted" Color="#6F7D91" />
+    <SolidColorBrush x:Key="Accent" Color="#82B1FF" />
+    <SolidColorBrush x:Key="AccentStrong" Color="#4D7CFF" />
+    <SolidColorBrush x:Key="AccentBorder" Color="#8CB2FF" />
+    <SolidColorBrush x:Key="Success" Color="#69D7A1" />
+    <SolidColorBrush x:Key="Danger" Color="#E05D72" />
+    <SolidColorBrush x:Key="TitleBarBackground" Color="#111821" />
+    <SolidColorBrush x:Key="PhotoBackground" Color="#080B10" />
+    <SolidColorBrush x:Key="EditorBackground" Color="#111923" />
+    <SolidColorBrush x:Key="BadgeBackground" Color="#1A2A43" />
+    <SolidColorBrush x:Key="OverlayBackground" Color="#D9101823" />
+    <SolidColorBrush x:Key="AiBadgeBackground" Color="#254774" />
+    <SolidColorBrush x:Key="StatusBackground" Color="#1A2738" />
+    <SolidColorBrush x:Key="ProgressTrack" Color="#2C394B" />
+</ResourceDictionary>
+

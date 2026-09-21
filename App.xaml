@@ -11,6 +11,7 @@
                 <ui:ThemesDictionary Theme="Dark" />
                 <!-- Loads the styles for all WPF UI controls -->
                 <ui:ControlsDictionary />
+                <ResourceDictionary Source="Themes/Dark.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

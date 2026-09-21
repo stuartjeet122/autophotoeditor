@@ -1,11 +1,14 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Win32;
 using AutoPhotoEditor.ViewModels;
 using AutoPhotoEditor.Models;
+using AutoPhotoEditor.Theming;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 
@@ -15,6 +18,8 @@ namespace AutoPhotoEditor
     {
         private MainViewModel? ViewModel =>
             DataContext as MainViewModel;
+
+        private bool? _isCompactLayout;
 
 
         // =============================================================
@@ -29,6 +34,9 @@ namespace AutoPhotoEditor
 
             DataContext =
                 App.Services.GetRequiredService<MainViewModel>();
+
+            ThemeManager.Apply(this, ViewModel?.ThemeMode ?? "System");
+            SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
 
 
             if (ViewModel != null)
@@ -126,6 +134,12 @@ namespace AutoPhotoEditor
             object? sender,
             PropertyChangedEventArgs e)
         {
+            if (e.PropertyName == nameof(MainViewModel.ThemeMode))
+            {
+                ThemeManager.Apply(this, ViewModel?.ThemeMode ?? "System");
+                return;
+            }
+
             if (e.PropertyName != nameof(MainViewModel.OriginalImage) &&
                 e.PropertyName != nameof(MainViewModel.EditedImage) &&
                 e.PropertyName != nameof(MainViewModel.EditedImagePath) &&
@@ -142,6 +156,7 @@ namespace AutoPhotoEditor
                 new Action(
                     () =>
                     {
+                        UpdateResponsiveLayout();
                         UpdateImageHost();
                         UpdateComparisonVisual();
                     }));
@@ -156,6 +171,9 @@ namespace AutoPhotoEditor
             object sender,
             RoutedEventArgs e)
         {
+            _ = ViewModel?.StartApiConnectionAsync();
+
+            UpdateResponsiveLayout();
             UpdateImageHost();
 
             Dispatcher.BeginInvoke(
@@ -169,15 +187,39 @@ namespace AutoPhotoEditor
         // UNLOADED
         // =============================================================
 
-        private void MainWindow_Unloaded(
+        private async void MainWindow_Unloaded(
             object sender,
             RoutedEventArgs e)
         {
+            if (ViewModel != null)
+                await ViewModel.StopApiConnectionAsync();
+
+            SystemEvents.UserPreferenceChanged -= SystemEvents_UserPreferenceChanged;
+            SystemThemeWatcher.UnWatch(this);
+
             if (ViewModel != null)
             {
                 ViewModel.PropertyChanged -=
                     ViewModel_PropertyChanged;
             }
+        }
+
+        private void SystemEvents_UserPreferenceChanged(
+            object? sender,
+            UserPreferenceChangedEventArgs e)
+        {
+            if (!string.Equals(
+                    ViewModel?.ThemeMode,
+                    "System",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            Dispatcher.BeginInvoke(
+                DispatcherPriority.DataBind,
+                new Action(
+                    () => ThemeManager.Apply(this, "System")));
         }
 
 
@@ -194,9 +236,58 @@ namespace AutoPhotoEditor
                 new Action(
                     () =>
                     {
+                        UpdateResponsiveLayout();
                         UpdateImageHost();
                         UpdateComparisonVisual();
                     }));
+        }
+
+        private void UpdateResponsiveLayout()
+        {
+            if (WorkspaceGrid.ActualWidth <= 0)
+                return;
+
+            bool compact = WorkspaceGrid.ActualWidth < 1040;
+            if (_isCompactLayout == compact)
+                return;
+
+            _isCompactLayout = compact;
+
+            WorkspaceGrid.ColumnDefinitions[0].Width =
+                compact ? new GridLength(1, GridUnitType.Star) : new GridLength(3, GridUnitType.Star);
+            WorkspaceGrid.ColumnDefinitions[1].Width =
+                compact ? new GridLength(0) : new GridLength(2, GridUnitType.Star);
+            WorkspaceGrid.ColumnDefinitions[1].MinWidth = compact ? 0 : 300;
+
+            WorkspaceGrid.RowDefinitions[0].Height =
+                new GridLength(1, GridUnitType.Star);
+            WorkspaceGrid.RowDefinitions[1].Height = compact
+                ? new GridLength(1, GridUnitType.Star)
+                : new GridLength(0);
+
+            Grid.SetColumn(CanvasPane, 0);
+            Grid.SetRow(CanvasPane, 0);
+            Grid.SetColumn(AdjustmentsPane, compact ? 0 : 1);
+            Grid.SetRow(AdjustmentsPane, compact ? 1 : 0);
+
+            TitleContext.Visibility = compact
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+
+            ApiConnectionStatusTextElement.Visibility = compact
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+
+            FooterHint.Visibility = compact
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+
+            CanvasPane.Margin = compact
+                ? new Thickness(0)
+                : new Thickness(0, 0, 14, 0);
+            AdjustmentsPane.Margin = compact
+                ? new Thickness(0, 12, 0, 0)
+                : new Thickness(0);
         }
 
 

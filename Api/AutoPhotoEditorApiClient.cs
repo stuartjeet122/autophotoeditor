@@ -135,12 +135,17 @@ public sealed class AutoPhotoEditorApiClient
             using JsonDocument document =
                 JsonDocument.Parse(response);
 
-            JsonElement artifact =
-                document.RootElement
-                    .GetProperty("artifact");
+            JsonElement root = document.RootElement;
 
-            JsonElement artifactData =
-                artifact.GetProperty("data");
+            if (!root.TryGetProperty("artifact", out JsonElement artifact) ||
+                !artifact.TryGetProperty("data", out JsonElement artifactData))
+            {
+                throw new AutoPhotoEditorApiException(
+                    "The API response does not contain mask JSON.");
+            }
+
+            var binaryPngsByReference =
+                ReadMaskBinaryPayload(artifact);
 
             // The mask-data endpoint returns the mask document directly in
             // artifact.data. Accept the older wrapped shape as well.
@@ -173,7 +178,18 @@ public sealed class AutoPhotoEditorApiClient
                     if (mask.Value.TryGetProperty("binary_png_base64", out JsonElement binary) &&
                         binary.ValueKind == JsonValueKind.String)
                     {
-                        maskBinaryPngBase64[mask.Name] = binary.GetString() ?? string.Empty;
+                        string? value = binary.GetString();
+                        if (!string.IsNullOrWhiteSpace(value))
+                            maskBinaryPngBase64[mask.Name] = value;
+                    }
+                    else if (mask.Value.TryGetProperty("binary_file", out JsonElement binaryFile) &&
+                             binaryFile.ValueKind == JsonValueKind.String &&
+                             TryGetMaskBinary(
+                                 binaryPngsByReference,
+                                 binaryFile.GetString(),
+                                 out string? referencedBinary))
+                    {
+                        maskBinaryPngBase64[mask.Name] = referencedBinary;
                     }
                 }
             }
@@ -198,6 +214,74 @@ public sealed class AutoPhotoEditorApiClient
                 "The API returned invalid mask JSON.",
                 ex);
         }
+    }
+
+    private static IReadOnlyDictionary<string, string> ReadMaskBinaryPayload(
+        JsonElement artifact)
+    {
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        if (!artifact.TryGetProperty("binary_masks", out JsonElement binaryMasks) ||
+            binaryMasks.ValueKind != JsonValueKind.Object)
+        {
+            return result;
+        }
+
+        foreach (JsonProperty binary in binaryMasks.EnumerateObject())
+        {
+            if (binary.Value.ValueKind != JsonValueKind.String)
+                continue;
+
+            string? value = binary.Value.GetString();
+            if (!string.IsNullOrWhiteSpace(value))
+                result[binary.Name] = value;
+        }
+
+        return result;
+    }
+
+    private static bool TryGetMaskBinary(
+        IReadOnlyDictionary<string, string> binaries,
+        string? reference,
+        out string value)
+    {
+        value = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(reference))
+            return false;
+
+        string normalizedReference = reference.Replace('\\', '/');
+        if (binaries.TryGetValue(reference, out string? directValue) &&
+            !string.IsNullOrWhiteSpace(directValue))
+        {
+            value = directValue;
+            return true;
+        }
+
+        if (binaries.TryGetValue(normalizedReference, out string? normalizedValue) &&
+            !string.IsNullOrWhiteSpace(normalizedValue))
+        {
+            value = normalizedValue;
+            return true;
+        }
+
+        string fileName = Path.GetFileName(normalizedReference);
+        foreach (KeyValuePair<string, string> binary in binaries)
+        {
+            if (string.Equals(
+                    Path.GetFileName(binary.Key.Replace('\\', '/')),
+                    fileName,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(binary.Value))
+                    continue;
+
+                value = binary.Value;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public async Task<AutoEnhanceApiResult> MaskedEnhanceAsync(
@@ -572,11 +656,11 @@ public sealed class AutoPhotoEditorApiClient
     {
         ValidateImagePath(imagePath);
 
-        if (strength < 0.0 || strength > 2.0)
+        if (strength < 0.0 || strength > 1.0)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(strength),
-                "Strength must be between 0 and 2.");
+                "Strength must be between 0 and 1.");
         }
 
 
@@ -921,25 +1005,18 @@ public sealed class AutoPhotoEditorApiClient
     {
         ValidateImageBytes(imageBytes);
 
-        if (!double.IsFinite(strength) || strength < 0.0 || strength > 2.0)
+        if (!double.IsFinite(strength) || strength < 0.0 || strength > 1.0)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(strength),
-                "Strength must be between 0 and 2.");
+                "Strength must be between 0 and 1.");
         }
 
-        if (analysis.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
+        if (analysis.ValueKind != JsonValueKind.Object)
         {
             throw new ArgumentException(
                 "Analysis must be a JSON object.",
                 nameof(analysis));
-        }
-
-        if (strength < 0.0 || strength > 2.0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(strength),
-                "Strength must be between 0 and 2.");
         }
 
         jobId ??= CreateJobId();

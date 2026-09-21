@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AutoPhotoEditor.Api
 {
@@ -13,5 +9,19 @@ namespace AutoPhotoEditor.Api
         public int Port { get; set; } = 8000;
 
         public string BaseUrl => $"http://{Ip}:{Port}/";
+
+        public Uri WebSocketUri
+        {
+            get
+            {
+                var builder = new UriBuilder(BaseUrl)
+                {
+                    Scheme = "ws",
+                    Path = "/ws"
+                };
+
+                return builder.Uri;
+            }
+        }
     }
 }

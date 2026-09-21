@@ -10,12 +10,13 @@
     Title="AutoPhotoEditor"
     Width="1560"
     Height="980"
-    MinWidth="680"
+    MinWidth="720"
     MinHeight="560"
     WindowStyle="None"
     ResizeMode="CanResize"
     WindowStartupLocation="CenterScreen"
-    Background="{StaticResource WindowBackground}">
+    Background="{StaticResource WindowBackground}"
+    UseLayoutRounding="True">
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="6" GlassFrameThickness="0" UseAeroCaptionButtons="False" />
@@ -34,7 +35,9 @@
         <SolidColorBrush x:Key="TextMuted" Color="#667486" />
         <SolidColorBrush x:Key="Accent" Color="#6EA8FE" />
         <SolidColorBrush x:Key="AccentStrong" Color="#3D7EFF" />
+        <SolidColorBrush x:Key="AccentBorder" Color="#78A8FF" />
         <SolidColorBrush x:Key="Success" Color="#64D6A2" />
+        <SolidColorBrush x:Key="Danger" Color="#C42B43" />
         <SolidColorBrush x:Key="TitleBarBackground" Color="#111821" />
         <SolidColorBrush x:Key="PhotoBackground" Color="#090D13" />
         <SolidColorBrush x:Key="EditorBackground" Color="#10161F" />
@@ -42,12 +45,19 @@
         <SolidColorBrush x:Key="OverlayBackground" Color="#CC111821" />
         <SolidColorBrush x:Key="AiBadgeBackground" Color="#24406A" />
         <SolidColorBrush x:Key="StatusBackground" Color="#192333" />
+        <SolidColorBrush x:Key="ProgressTrack" Color="#2A3544" />
 
         <Style x:Key="Panel" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource Surface}" />
             <Setter Property="BorderBrush" Value="{StaticResource Line}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="CornerRadius" Value="16" />
+        </Style>
+
+        <Style x:Key="InspectorCard" BasedOn="{StaticResource Panel}" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource SurfaceRaised}" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Margin" Value="0,0,0,12" />
         </Style>
 
         <Style x:Key="SectionTitle" TargetType="TextBlock">
@@ -56,9 +66,33 @@
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
 
+        <Style x:Key="WorkflowCue" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource BadgeBackground}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Padding" Value="9,7" />
+        </Style>
+
+        <Style x:Key="PageTitle" BasedOn="{StaticResource SectionTitle}" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="21" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="Eyebrow" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Accent}" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+        </Style>
+
         <Style x:Key="Caption" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
             <Setter Property="FontSize" Value="11" />
+        </Style>
+
+        <Style x:Key="MutedCaption" BasedOn="{StaticResource Caption}" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextMuted}" />
         </Style>
 
         <Style x:Key="ToolbarButton" TargetType="Button">
@@ -66,8 +100,9 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="12,7" />
+            <Setter Property="Padding" Value="12,8" />
             <Setter Property="Margin" Value="3,0" />
+            <Setter Property="FontSize" Value="11" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -76,9 +111,12 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="8"
+                            CornerRadius="9"
                             Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <ContentPresenter
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True" />
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -87,6 +125,7 @@
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{StaticResource SurfaceHover}" />
                     <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource Line}" />
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True">
                     <Setter Property="Background" Value="{StaticResource AccentStrong}" />
@@ -98,8 +137,27 @@
             </Style.Triggers>
         </Style>
 
+        <Style x:Key="AccentButton" BasedOn="{StaticResource ToolbarButton}" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AccentStrong}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBorder}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Accent}" />
+                    <Setter Property="Foreground" Value="White" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="{StaticResource AccentStrong}" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.35" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="WindowButton" BasedOn="{StaticResource ToolbarButton}" TargetType="Button">
-            <Setter Property="Width" Value="42" />
+            <Setter Property="Width" Value="40" />
             <Setter Property="Height" Value="34" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0" />
@@ -110,24 +168,10 @@
         <Style x:Key="CloseWindowButton" BasedOn="{StaticResource WindowButton}" TargetType="Button">
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#C42B43" />
+                    <Setter Property="Background" Value="{StaticResource Danger}" />
                     <Setter Property="Foreground" Value="White" />
                 </Trigger>
             </Style.Triggers>
-        </Style>
-
-        <Style x:Key="AccentButton" BasedOn="{StaticResource ToolbarButton}" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource AccentStrong}" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="BorderBrush" Value="#78A8FF" />
-        </Style>
-
-        <Style x:Key="RailButton" BasedOn="{StaticResource ToolbarButton}" TargetType="Button">
-            <Setter Property="Width" Value="52" />
-            <Setter Property="Height" Value="48" />
-            <Setter Property="Padding" Value="4" />
-            <Setter Property="Margin" Value="0,5" />
-            <Setter Property="FontSize" Value="11" />
         </Style>
 
         <Style x:Key="EditorTextBox" TargetType="TextBox">
@@ -135,8 +179,9 @@
             <Setter Property="Background" Value="{StaticResource EditorBackground}" />
             <Setter Property="BorderBrush" Value="{StaticResource Line}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="7,5" />
+            <Setter Property="Padding" Value="8,6" />
             <Setter Property="FontSize" Value="11" />
+            <Setter Property="MinHeight" Value="30" />
         </Style>
 
         <Style x:Key="EditorComboBox" TargetType="ComboBox">
@@ -144,32 +189,51 @@
             <Setter Property="Background" Value="{StaticResource EditorBackground}" />
             <Setter Property="BorderBrush" Value="{StaticResource Line}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="Padding" Value="7,5" />
             <Setter Property="FontSize" Value="11" />
+            <Setter Property="MinHeight" Value="30" />
         </Style>
 
         <Style x:Key="EditorSlider" TargetType="Slider">
             <Setter Property="Foreground" Value="{StaticResource Accent}" />
             <Setter Property="Margin" Value="0,3,0,0" />
             <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="MinHeight" Value="24" />
         </Style>
 
         <Style x:Key="EditorCheckBox" TargetType="CheckBox">
             <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
             <Setter Property="FontSize" Value="11" />
-            <Setter Property="Margin" Value="0,4,0,4" />
+            <Setter Property="Margin" Value="0,5,0,5" />
+        </Style>
+
+        <Style x:Key="InspectorExpander" TargetType="Expander">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+            <Setter Property="Background" Value="{StaticResource SurfaceRaised}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="14,12" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
     </Window.Resources>
 
     <Grid Background="{StaticResource WindowBackground}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="62" />
+            <RowDefinition Height="70" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="34" />
+            <RowDefinition Height="40" />
         </Grid.RowDefinitions>
 
-        <Border x:Name="TitleBar" Grid.Row="0" Background="{StaticResource TitleBarBackground}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-            <Grid Margin="18,0,6,0">
+        <Border
+            x:Name="TitleBar"
+            Grid.Row="0"
+            Background="{StaticResource TitleBarBackground}"
+            BorderBrush="{StaticResource Line}"
+            BorderThickness="0,0,0,1"
+            MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Grid Margin="20,0,8,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -177,32 +241,48 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Width="42" Height="42" CornerRadius="12" Background="{StaticResource AccentStrong}">
-                        <TextBlock Text="✦" Foreground="White" FontSize="23" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Border Width="40" Height="40" CornerRadius="12" Background="{StaticResource AccentStrong}">
+                        <TextBlock Text="✦" Foreground="White" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="AutoPhotoEditor" Foreground="{StaticResource TextPrimary}" FontSize="19" FontWeight="SemiBold" />
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="AutoPhotoEditor" Foreground="{StaticResource TextPrimary}" FontSize="18" FontWeight="SemiBold" />
                         <TextBlock Text="NON-DESTRUCTIVE PHOTO WORKSPACE" Foreground="{StaticResource TextMuted}" FontSize="9" Margin="0,3,0,0" />
                     </StackPanel>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
-                    <Border Background="{StaticResource BadgeBackground}" CornerRadius="8" Padding="10,6" Margin="5,0">
+                <StackPanel x:Name="TitleContext" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Border Background="{StaticResource BadgeBackground}" CornerRadius="10" Padding="10,6" Margin="4,0">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="7" Height="7" Fill="{StaticResource Success}" VerticalAlignment="Center" Margin="0,0,7,0" />
-                            <TextBlock Text="ORIGINAL" Foreground="{StaticResource TextSecondary}" FontSize="10" FontWeight="SemiBold" />
+                            <TextBlock Text="ORIGINAL PRESERVED" Foreground="{StaticResource TextSecondary}" FontSize="10" FontWeight="SemiBold" />
                         </StackPanel>
                     </Border>
-                    <TextBlock Text="›" Foreground="{StaticResource TextMuted}" FontSize="18" VerticalAlignment="Center" Margin="4,0" />
-                    <Border Background="{StaticResource BadgeBackground}" CornerRadius="8" Padding="10,6" Margin="5,0">
+                    <Border Background="{StaticResource AiBadgeBackground}" CornerRadius="10" Padding="10,6" Margin="4,0">
                         <TextBlock Text="EDIT TIMELINE" Foreground="{StaticResource Accent}" FontSize="10" FontWeight="SemiBold" />
                     </Border>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Style="{StaticResource ToolbarButton}" Command="{Binding ChooseImageCommand}" Content="Open" ToolTip="Open image" />
-                    <Button Style="{StaticResource ToolbarButton}" Command="{Binding CheckApiHealthCommand}" Content="API STATUS" />
-                    <Button Style="{StaticResource AccentButton}" Command="{Binding SaveImageCommand}" Content="Export" />
+                    <Border x:Name="ApiConnectionBadge" Background="{StaticResource StatusBackground}" CornerRadius="9" Padding="9,6" Margin="6,0,4,0" ToolTip="{Binding ConnectionStatusMessage}">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="7" Height="7" VerticalAlignment="Center" Margin="0,0,7,0">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="{StaticResource Accent}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsApiConnected}" Value="True">
+                                                <Setter Property="Fill" Value="{StaticResource Success}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <TextBlock x:Name="ApiConnectionStatusTextElement" Text="{Binding ApiConnectionStatusText}" Foreground="{StaticResource TextSecondary}" FontSize="10" />
+                        </StackPanel>
+                    </Border>
+                    <Button Style="{StaticResource ToolbarButton}" Command="{Binding CycleThemeCommand}" Content="{Binding ThemeModeDisplay}" ToolTip="Cycle System, Light, and Dark themes" />
+                    <Button Style="{StaticResource AccentButton}" Command="{Binding SaveImageCommand}" Content="Export" Margin="8,0,10,0" />
                     <Button Style="{StaticResource WindowButton}" Click="MinimizeButton_Click" Content="—" ToolTip="Minimize" />
                     <Button Style="{StaticResource WindowButton}" Click="MaximizeButton_Click" Content="□" ToolTip="Maximize" />
                     <Button Style="{StaticResource CloseWindowButton}" Click="CloseButton_Click" Content="×" ToolTip="Close" />
@@ -210,30 +290,37 @@
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1" Margin="16,14,16,12">
+        <Grid x:Name="WorkspaceGrid" Grid.Row="1" Margin="18,16,18,14">
+            <Grid.RowDefinitions>
+                <RowDefinition x:Name="CanvasWorkspaceRow" Height="*" />
+                <RowDefinition x:Name="AdjustmentsWorkspaceRow" Height="0" />
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="3*" />
-                <ColumnDefinition Width="2*" MinWidth="300" MaxWidth="370" />
+                <ColumnDefinition Width="3*" MinWidth="360" />
+                <ColumnDefinition Width="2*" MinWidth="300" MaxWidth="390" />
             </Grid.ColumnDefinitions>
 
-            <Grid Grid.Column="0" Margin="0,0,14,0">
+            <Grid x:Name="CanvasPane" Grid.Row="0" Grid.Column="0" Margin="0,0,16,0">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="52" />
+                    <RowDefinition Height="58" />
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="62" />
+                    <RowDefinition Height="72" />
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0">
+                <Grid Grid.Row="0" Margin="2,0,2,0">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Canvas" Foreground="{StaticResource TextPrimary}" FontSize="18" FontWeight="SemiBold" />
-                        <TextBlock Text="Use the buttons below to compare the current edit with the untouched original." Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,3,0,0" />
+                        <TextBlock Text="Preview canvas" Style="{StaticResource Eyebrow}" />
+                        <TextBlock Text="Compare the current edit with your untouched original." Foreground="{StaticResource TextPrimary}" FontSize="16" FontWeight="SemiBold" Margin="0,4,0,0" />
                     </StackPanel>
-                    <Border HorizontalAlignment="Right" VerticalAlignment="Center" Background="#182333" CornerRadius="8" Padding="11,7">
-                        <TextBlock Text="{Binding HistoryPositionText}" Foreground="{StaticResource Accent}" FontSize="11" FontWeight="SemiBold" />
+                    <Border HorizontalAlignment="Right" VerticalAlignment="Center" Background="{StaticResource BadgeBackground}" CornerRadius="10" Padding="11,7">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="6" Height="6" Fill="{StaticResource Accent}" VerticalAlignment="Center" Margin="0,0,7,0" />
+                            <TextBlock Text="{Binding HistoryPositionText}" Foreground="{StaticResource Accent}" FontSize="11" FontWeight="SemiBold" />
+                        </StackPanel>
                     </Border>
                 </Grid>
 
-                <Border Grid.Row="1" Style="{StaticResource Panel}" Background="{StaticResource PhotoBackground}" Padding="2">
+                <Border Grid.Row="1" Style="{StaticResource Panel}" Background="{StaticResource PhotoBackground}" Padding="10">
                     <Grid x:Name="PhotoComparisonArea" Background="{StaticResource PhotoBackground}" ClipToBounds="True">
                         <Grid x:Name="ImageHost" HorizontalAlignment="Center" VerticalAlignment="Center" ClipToBounds="True">
                             <Image x:Name="BeforeImageControl" Source="{Binding OriginalImage}" Stretch="Fill" />
@@ -246,7 +333,8 @@
                                 </Border.OpacityMask>
                             </Border>
                         </Grid>
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="True">
                             <StackPanel.Style>
                                 <Style TargetType="StackPanel">
                                     <Setter Property="Visibility" Value="Collapsed" />
@@ -257,34 +345,55 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <TextBlock Text="Open an image to begin" Foreground="{StaticResource TextSecondary}" FontSize="16" HorizontalAlignment="Center" />
-                            <TextBlock Text="Your original is always preserved." Foreground="{StaticResource TextMuted}" FontSize="11" HorizontalAlignment="Center" Margin="0,7,0,0" />
+                            <Border Width="72" Height="72" CornerRadius="22" Background="{StaticResource BadgeBackground}" HorizontalAlignment="Center" Margin="0,0,0,16">
+                                <TextBlock Text="✦" Foreground="{StaticResource Accent}" FontSize="34" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Open an image to begin" Foreground="{StaticResource TextPrimary}" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            <TextBlock Text="Your original stays safe while every edit is previewed." Foreground="{StaticResource TextSecondary}" FontSize="11" HorizontalAlignment="Center" Margin="0,8,0,0" />
+                            <Button Style="{StaticResource AccentButton}" Command="{Binding ChooseImageCommand}" Content="Open image" HorizontalAlignment="Center" Margin="0,18,0,0" Padding="18,9" />
                         </StackPanel>
-                            <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="18,18,0,0" Background="{StaticResource OverlayBackground}" CornerRadius="6" Padding="8,5">
-                            <TextBlock Text="BEFORE" Foreground="{StaticResource TextSecondary}" FontSize="10" FontWeight="SemiBold" />
+
+                        <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="16" Background="{StaticResource OverlayBackground}" CornerRadius="8" Padding="9,6">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="6" Height="6" Fill="{StaticResource Success}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <TextBlock Text="BEFORE" Foreground="{StaticResource TextSecondary}" FontSize="10" FontWeight="SemiBold" />
+                            </StackPanel>
                         </Border>
-                            <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,18,18,0" Background="{StaticResource OverlayBackground}" CornerRadius="6" Padding="8,5">
-                            <TextBlock Text="AFTER" Foreground="{StaticResource Accent}" FontSize="10" FontWeight="SemiBold" />
+                        <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="16" Background="{StaticResource OverlayBackground}" CornerRadius="8" Padding="9,6">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="6" Height="6" Fill="{StaticResource Accent}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <TextBlock Text="AFTER" Foreground="{StaticResource Accent}" FontSize="10" FontWeight="SemiBold" />
+                            </StackPanel>
                         </Border>
                     </Grid>
                 </Border>
 
-                <Grid Grid.Row="2" Margin="4,12,4,0">
+                <Grid Grid.Row="2" Margin="2,14,2,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Style="{StaticResource ToolbarButton}" Command="{Binding ShowBeforeCommand}" Content="Before" HorizontalAlignment="Stretch" Margin="0,0,5,0" />
-                    <Button Grid.Column="1" Style="{StaticResource AccentButton}" Command="{Binding ShowAfterCommand}" Content="After" HorizontalAlignment="Stretch" Margin="5,0,0,0" />
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
-                        <Button Style="{StaticResource ToolbarButton}" Command="{Binding PreviousEditCommand}" Content="‹" FontSize="20" ToolTip="Previous edit" IsEnabled="{Binding CanGoPrevious}" />
-                        <Button Style="{StaticResource ToolbarButton}" Command="{Binding NextEditCommand}" Content="›" FontSize="20" ToolTip="Next edit" IsEnabled="{Binding CanGoNext}" />
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Style="{StaticResource ToolbarButton}" Command="{Binding ShowBeforeCommand}" Content="Before" Padding="12,7" Margin="0,0,4,0" />
+                        <Button Style="{StaticResource AccentButton}" Command="{Binding ShowAfterCommand}" Content="After" Padding="12,7" Margin="4,0,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="14,0">
+                        <TextBlock Text="SPLIT" Style="{StaticResource Eyebrow}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <Slider Width="150" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding ComparisonPosition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditorSlider}" />
+                        <Button Style="{StaticResource ToolbarButton}" Command="{Binding ResetComparisonCommand}" Content="50 / 50" Padding="8,5" Margin="10,0,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Style="{StaticResource ToolbarButton}" Command="{Binding PreviousEditCommand}" Content="‹" FontSize="20" Padding="10,1" ToolTip="Previous edit" IsEnabled="{Binding CanGoPrevious}" />
+                        <Button Style="{StaticResource ToolbarButton}" Command="{Binding NextEditCommand}" Content="›" FontSize="20" Padding="10,1" ToolTip="Next edit" IsEnabled="{Binding CanGoNext}" />
                     </StackPanel>
                 </Grid>
             </Grid>
 
-            <Border Grid.Column="1" Style="{StaticResource Panel}" Padding="16">
+            <Border x:Name="AdjustmentsPane" Grid.Row="0" Grid.Column="1" Style="{StaticResource Panel}" Padding="16">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -292,53 +401,60 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid Grid.Row="0" Margin="0,0,0,14">
                         <StackPanel>
-                            <TextBlock Text="Adjustments" Style="{StaticResource SectionTitle}" FontSize="20" />
-                            <TextBlock Text="Build a reusable edit, one action at a time." Style="{StaticResource Caption}" Margin="0,4,0,0" />
+                            <TextBlock Text="Inspector" Style="{StaticResource Eyebrow}" />
+                            <TextBlock Text="Build your edit" Style="{StaticResource PageTitle}" Margin="0,3,0,0" />
+                            <TextBlock Text="Each action previews first, then joins the timeline as its own edit." Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,5,0,0" />
+                            <Border Style="{StaticResource WorkflowCue}" Margin="0,10,0,0" HorizontalAlignment="Left">
+                                <TextBlock Text="1  OPEN   •   2  PREVIEW   •   3  COMMIT   •   4  EXPORT" Foreground="{StaticResource Accent}" FontSize="9" FontWeight="Bold" />
+                            </Border>
                         </StackPanel>
-                        <Border HorizontalAlignment="Right" Background="{StaticResource StatusBackground}" CornerRadius="6" Padding="7,4">
-                            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource TextSecondary}" FontSize="10" MaxWidth="145" TextTrimming="CharacterEllipsis" />
+                        <Border HorizontalAlignment="Right" VerticalAlignment="Top" Background="{StaticResource StatusBackground}" CornerRadius="9" Padding="8,6" MaxWidth="128">
+                            <StackPanel>
+                                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource TextSecondary}" FontSize="10" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding ApiConnectionStatusText}" Foreground="{StaticResource Accent}" FontSize="9" Margin="0,3,0,0" />
+                            </StackPanel>
                         </Border>
                     </Grid>
 
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,3,0">
                         <StackPanel>
-                            <Border Style="{StaticResource Panel}" Background="{StaticResource SurfaceRaised}" Padding="13" Margin="0,0,0,12">
+                            <Border Style="{StaticResource InspectorCard}">
                                 <StackPanel>
                                     <Grid>
                                         <StackPanel>
                                             <TextBlock Text="Auto Enhance" Style="{StaticResource SectionTitle}" />
-                                            <TextBlock Text="Adaptive balance for tone, color and detail." Style="{StaticResource Caption}" Margin="0,3,0,0" />
+                                            <TextBlock Text="Adaptive balance for tone, color and detail." Style="{StaticResource Caption}" Margin="0,4,0,0" />
                                         </StackPanel>
-                                        <Border HorizontalAlignment="Right" Background="{StaticResource AiBadgeBackground}" CornerRadius="5" Padding="6,3">
+                                        <Border HorizontalAlignment="Right" Background="{StaticResource AiBadgeBackground}" CornerRadius="7" Padding="7,4">
                                             <TextBlock Text="AI" Foreground="{StaticResource Accent}" FontSize="9" FontWeight="Bold" />
                                         </Border>
                                     </Grid>
-                                    <DockPanel Margin="0,13,0,5">
+                                    <DockPanel Margin="0,16,0,5">
                                         <TextBlock Text="Strength" Style="{StaticResource Caption}" />
                                         <TextBlock DockPanel.Dock="Right" Text="{Binding AutoEnhanceStrength, StringFormat={}{0:0.0}}" Foreground="{StaticResource TextPrimary}" FontSize="11" />
                                     </DockPanel>
-                                    <Slider Minimum="0" Maximum="2" TickFrequency="0.1" IsSnapToTickEnabled="True" Value="{Binding AutoEnhanceStrength, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditorSlider}" />
-                                    <Button Style="{StaticResource AccentButton}" Command="{Binding AutoEnhanceCommand}" Content="Enhance current image" Margin="0,12,0,0" HorizontalAlignment="Stretch" />
+                                    <Slider Minimum="0" Maximum="1" TickFrequency="0.1" IsSnapToTickEnabled="True" Value="{Binding AutoEnhanceStrength, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditorSlider}" />
+                                    <Button Style="{StaticResource AccentButton}" Command="{Binding AutoEnhanceCommand}" Content="Preview &amp; add auto enhance" Margin="0,14,0,0" HorizontalAlignment="Stretch" />
                                 </StackPanel>
                             </Border>
 
-                            <Border Style="{StaticResource Panel}" Background="{StaticResource SurfaceRaised}" Padding="13" Margin="0,0,0,12">
+                            <Border Style="{StaticResource InspectorCard}">
                                 <StackPanel>
                                     <Grid>
                                         <StackPanel>
                                             <TextBlock Text="Manual Adjust" Style="{StaticResource SectionTitle}" />
-                                            <TextBlock Text="Tune the original image, preview changes, then apply one final result." Style="{StaticResource Caption}" Margin="0,3,0,0" />
+                                            <TextBlock Text="Preview sliders on the current image, then commit one separate manual edit." Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,0" />
                                         </StackPanel>
                                         <TextBlock Text="PRO" Foreground="{StaticResource Accent}" FontSize="9" FontWeight="Bold" HorizontalAlignment="Right" />
                                     </Grid>
-                                    <Grid Margin="0,14,0,0">
+                                    <Grid Margin="0,16,0,0">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="72" /><ColumnDefinition Width="*" /><ColumnDefinition Width="56" /></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="76" /><ColumnDefinition Width="*" /><ColumnDefinition Width="56" /></Grid.ColumnDefinitions>
 
                                         <TextBlock Grid.Row="0" Text="Exposure" Style="{StaticResource Caption}" VerticalAlignment="Center" />
                                         <Slider Grid.Row="0" Grid.Column="1" Minimum="-2" Maximum="2" TickFrequency="0.1" IsSnapToTickEnabled="True" Value="{Binding ManualExposure, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditorSlider}" />
@@ -372,22 +488,29 @@
                                         <Slider Grid.Row="7" Grid.Column="1" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding ManualSharpness, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditorSlider}" />
                                         <TextBox Grid.Row="7" Grid.Column="2" Style="{StaticResource EditorTextBox}" Text="{Binding ManualSharpness, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:0}}" HorizontalContentAlignment="Right" />
                                     </Grid>
-                                    <Button Style="{StaticResource AccentButton}" Command="{Binding ManualAdjustCommand}" Content="Apply manual adjustments" Margin="0,12,0,0" HorizontalAlignment="Stretch" />
+                                    <Button Style="{StaticResource AccentButton}" Command="{Binding ManualAdjustCommand}" Content="Preview &amp; add manual edit" Margin="0,14,0,0" HorizontalAlignment="Stretch" />
                                 </StackPanel>
                             </Border>
 
-                            <Expander Header="Mask &amp; AI tools" Foreground="{StaticResource TextPrimary}" Background="{StaticResource SurfaceRaised}" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="10" Margin="0,0,0,10">
-                                <StackPanel Margin="0,10,0,0">
-                                    <TextBlock Text="Masked enhancement reuses masks extracted from the untouched original." Style="{StaticResource Caption}" TextWrapping="Wrap" />
-                                    <Grid Margin="0,10,0,0">
+                            <Expander Header="Mask &amp; AI tools" Style="{StaticResource InspectorExpander}">
+                                <StackPanel Margin="0,12,0,0">
+                                    <TextBlock Text="Use masks extracted from the untouched original to enhance selected regions." Style="{StaticResource Caption}" TextWrapping="Wrap" />
+                                    <Grid Margin="0,12,0,0">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                         <TextBlock Text="Device" Style="{StaticResource Caption}" VerticalAlignment="Center" />
                                         <ComboBox Grid.Column="1" Style="{StaticResource EditorComboBox}" Margin="12,0,0,0" SelectedValue="{Binding MaskDevice, Mode=TwoWay}" SelectedValuePath="Content">
                                             <ComboBoxItem Content="auto" /><ComboBoxItem Content="cpu" /><ComboBoxItem Content="cuda" />
                                         </ComboBox>
                                     </Grid>
-                                    <TextBlock Text="Choose masks to enhance" Style="{StaticResource Caption}" Margin="0,10,0,3" />
-                                    <Border Background="{StaticResource EditorBackground}" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="7" MaxHeight="150">
+                                    <Grid Margin="0,12,0,3">
+                                        <TextBlock Text="Regions to enhance" Style="{StaticResource Caption}" VerticalAlignment="Center" />
+                                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                            <Button Style="{StaticResource ToolbarButton}" Command="{Binding SelectAllMasksCommand}" Content="All" Padding="7,4" Margin="0,0,3,0" ToolTip="Select every discovered mask" />
+                                            <Button Style="{StaticResource ToolbarButton}" Command="{Binding ClearMaskSelectionCommand}" Content="None" Padding="7,4" Margin="3,0,0,0" ToolTip="Clear mask selection" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Text="{Binding MaskSelectionHint}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                    <Border Background="{StaticResource EditorBackground}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="9" Padding="8" MaxHeight="150">
                                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                                             <ItemsControl ItemsSource="{Binding MaskOptions}">
                                                 <ItemsControl.ItemTemplate>
@@ -398,21 +521,26 @@
                                             </ItemsControl>
                                         </ScrollViewer>
                                     </Border>
-                                    <TextBlock Text="Hover a mask to highlight it on the image. Checking several enhances them together." Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,0" />
-                                    <CheckBox Style="{StaticResource EditorCheckBox}" IsChecked="{Binding ManualAdjustMask, Mode=TwoWay}" Content="Apply manual sliders only to selected mask(s)" />
-                                    <Grid Margin="0,9,0,0">
+                                    <StackPanel Orientation="Horizontal" Margin="0,7,0,0">
+                                        <TextBlock Text="Selected: " Style="{StaticResource Caption}" />
+                                        <TextBlock Text="{Binding SelectedMaskNamesText}" Style="{StaticResource Caption}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <TextBlock Text="Hover a mask to highlight it on the canvas. Select several to enhance them together." Style="{StaticResource MutedCaption}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                    <CheckBox Style="{StaticResource EditorCheckBox}" IsChecked="{Binding ManualAdjustMask, Mode=TwoWay}" Content="Apply manual sliders only to selected masks" />
+                                    <Grid Margin="0,10,0,0">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                         <Button Grid.Column="0" Style="{StaticResource ToolbarButton}" Command="{Binding ExtractMaskDataCommand}" Content="Extract masks" Margin="0,0,4,0" />
-                                        <Button Grid.Column="1" Style="{StaticResource AccentButton}" Command="{Binding MaskedEnhanceCommand}" Content="Enhance masks" Margin="4,0,0,0" />
+                                        <Button Grid.Column="1" Style="{StaticResource AccentButton}" Command="{Binding MaskedEnhanceCommand}" Content="Enhance masks" Margin="4,0,0,0" IsEnabled="{Binding HasAvailableMasks}" />
                                     </Grid>
-                                    <TextBlock Text="AI denoise" Style="{StaticResource Caption}" Margin="0,13,0,3" />
-                                    <Button Style="{StaticResource ToolbarButton}" Command="{Binding DenoiseCommand}" Content="Denoise current image" HorizontalAlignment="Stretch" />
+                                    <TextBlock Text="AI denoise" Style="{StaticResource Caption}" Margin="0,14,0,4" />
+                                    <Button Style="{StaticResource ToolbarButton}" Command="{Binding DenoiseCommand}" Content="Preview denoise" HorizontalAlignment="Stretch" />
                                 </StackPanel>
                             </Expander>
 
-                            <Expander Header="Geometry &amp; lens" Foreground="{StaticResource TextPrimary}" Background="{StaticResource SurfaceRaised}" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="10" Margin="0,0,0,10">
-                                <StackPanel Margin="0,10,0,0">
-                                    <TextBlock Text="Geometry correction" Style="{StaticResource Caption}" />
+                            <Expander Header="Geometry &amp; lens" Style="{StaticResource InspectorExpander}">
+                                <StackPanel Margin="0,12,0,0">
+                                    <TextBlock Text="Correct perspective, rotation and optical distortion." Style="{StaticResource Caption}" TextWrapping="Wrap" />
+                                    <TextBlock Text="Geometry correction" Style="{StaticResource Caption}" Margin="0,12,0,0" />
                                     <Grid Margin="0,6,0,0">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                         <TextBlock Text="Mode" Style="{StaticResource Caption}" VerticalAlignment="Center" />
@@ -422,48 +550,55 @@
                                         <TextBlock Grid.Column="2" Text="Rotate" Style="{StaticResource Caption}" VerticalAlignment="Center" />
                                         <TextBox Grid.Column="3" Style="{StaticResource EditorTextBox}" Text="{Binding GeometryRotate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="8,0,0,0" />
                                     </Grid>
-                                    <Grid Margin="0,7,0,0">
+                                    <Grid Margin="0,8,0,0">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                         <TextBlock Text="Aspect" Style="{StaticResource Caption}" VerticalAlignment="Center" />
                                         <TextBox Grid.Column="1" Style="{StaticResource EditorTextBox}" Text="{Binding GeometryAspect, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="8,0,8,0" />
                                         <TextBlock Grid.Column="2" Text="Scale" Style="{StaticResource Caption}" VerticalAlignment="Center" />
                                         <TextBox Grid.Column="3" Style="{StaticResource EditorTextBox}" Text="{Binding GeometryScale, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="8,0,0,0" />
                                     </Grid>
-                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                    <StackPanel Orientation="Horizontal" Margin="0,9,0,0">
                                         <CheckBox Style="{StaticResource EditorCheckBox}" IsChecked="{Binding GeometryCrop, Mode=TwoWay}" Content="Crop valid area" />
                                         <Button Style="{StaticResource AccentButton}" Command="{Binding GeometryCorrectionCommand}" Content="Apply geometry" Margin="12,0,0,0" />
                                     </StackPanel>
-                                    <Separator Background="{StaticResource Line}" Margin="0,12,0,8" />
+                                    <Separator Background="{StaticResource Line}" Margin="0,14,0,10" />
                                     <CheckBox Style="{StaticResource EditorCheckBox}" IsChecked="{Binding LensManual, Mode=TwoWay}" Content="Use manual lens coefficients" />
                                     <Grid Margin="0,5,0,0">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                         <TextBlock Text="K1" Style="{StaticResource Caption}" VerticalAlignment="Center" /><TextBox Grid.Column="1" Style="{StaticResource EditorTextBox}" Text="{Binding LensK1, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="8,0,8,0" />
                                         <TextBlock Grid.Column="2" Text="K2" Style="{StaticResource Caption}" VerticalAlignment="Center" /><TextBox Grid.Column="3" Style="{StaticResource EditorTextBox}" Text="{Binding LensK2, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="8,0,0,0" />
                                     </Grid>
-                                    <Grid Margin="0,7,0,0">
+                                    <Grid Margin="0,8,0,0">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                         <TextBlock Text="K3" Style="{StaticResource Caption}" VerticalAlignment="Center" /><TextBox Grid.Column="1" Style="{StaticResource EditorTextBox}" Text="{Binding LensK3, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="8,0,8,0" />
                                         <TextBlock Grid.Column="2" Text="P1" Style="{StaticResource Caption}" VerticalAlignment="Center" /><TextBox Grid.Column="3" Style="{StaticResource EditorTextBox}" Text="{Binding LensP1, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="8,0,0,0" />
                                     </Grid>
-                                    <Button Style="{StaticResource ToolbarButton}" Command="{Binding LensCorrectionCommand}" Content="Apply lens correction" Margin="0,9,0,0" HorizontalAlignment="Stretch" />
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <TextBlock Text="P2" Style="{StaticResource Caption}" VerticalAlignment="Center" /><TextBox Grid.Column="1" Style="{StaticResource EditorTextBox}" Text="{Binding LensP2, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="8,0,8,0" />
+                                        <TextBlock Grid.Column="2" Text="Strength" Style="{StaticResource Caption}" VerticalAlignment="Center" /><TextBox Grid.Column="3" Style="{StaticResource EditorTextBox}" Text="{Binding LensStrength, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="8,0,0,0" />
+                                    </Grid>
+                                    <Button Style="{StaticResource ToolbarButton}" Command="{Binding LensCorrectionCommand}" Content="Preview lens correction" Margin="0,10,0,0" HorizontalAlignment="Stretch" />
                                 </StackPanel>
                             </Expander>
 
-                            <Expander Header="Color grade &amp; pipeline" Foreground="{StaticResource TextPrimary}" Background="{StaticResource SurfaceRaised}" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="10" Margin="0,0,0,10">
-                                <StackPanel Margin="0,10,0,0">
-                                    <TextBlock Text="Choose a LUT preset" Style="{StaticResource Caption}" />
-                                    <ComboBox Style="{StaticResource EditorComboBox}" ItemsSource="{Binding LUTs}" SelectedItem="{Binding SelectedLut, Mode=TwoWay}" DisplayMemberPath="Name" Margin="0,5,0,0" />
-                                    <Button Style="{StaticResource ToolbarButton}" Command="{Binding ColorGradeCommand}" Content="Apply color grade" Margin="0,9,0,0" HorizontalAlignment="Stretch" />
-                                    <Separator Background="{StaticResource Line}" Margin="0,12,0,8" />
+                            <Expander Header="Color grade &amp; pipeline" Style="{StaticResource InspectorExpander}">
+                                <StackPanel Margin="0,12,0,0">
+                                    <TextBlock Text="Finish with a LUT or run a repeatable processing pipeline." Style="{StaticResource Caption}" TextWrapping="Wrap" />
+                                    <TextBlock Text="LUT preset" Style="{StaticResource Caption}" Margin="0,12,0,0" />
+                                    <ComboBox Style="{StaticResource EditorComboBox}" ItemsSource="{Binding LUTs}" SelectedItem="{Binding SelectedLut, Mode=TwoWay}" DisplayMemberPath="Name" Margin="0,6,0,0" />
+                                    <Button Style="{StaticResource ToolbarButton}" Command="{Binding ColorGradeCommand}" Content="Preview color grade" Margin="0,10,0,0" HorizontalAlignment="Stretch" />
+                                    <Separator Background="{StaticResource Line}" Margin="0,14,0,10" />
                                     <TextBlock Text="Pipeline stages" Style="{StaticResource Caption}" />
-                                    <TextBox Style="{StaticResource EditorTextBox}" Text="{Binding PipelineStages, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,0" />
-                                    <Button Style="{StaticResource AccentButton}" Command="{Binding RunPipelineCommand}" Content="Run pipeline" Margin="0,9,0,0" HorizontalAlignment="Stretch" />
+                                    <TextBox Style="{StaticResource EditorTextBox}" Text="{Binding PipelineStages, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,6,0,0" />
+                                    <Button Style="{StaticResource AccentButton}" Command="{Binding RunPipelineCommand}" Content="Preview pipeline" Margin="0,10,0,0" HorizontalAlignment="Stretch" />
                                 </StackPanel>
                             </Expander>
 
-                            <Expander Header="Analysis &amp; service" Foreground="{StaticResource TextPrimary}" Background="{StaticResource SurfaceRaised}" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="10" Margin="0,0,0,10">
-                                <StackPanel Margin="0,10,0,0">
-                                    <Grid>
+                            <Expander Header="Analysis &amp; service" Style="{StaticResource InspectorExpander}">
+                                <StackPanel Margin="0,12,0,0">
+                                    <TextBlock Text="Inspect the current image or verify the processing service." Style="{StaticResource Caption}" TextWrapping="Wrap" />
+                                    <Grid Margin="0,12,0,0">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                         <Button Grid.Column="0" Style="{StaticResource ToolbarButton}" Command="{Binding AnalyzeImageCommand}" Content="Analyze image" Margin="0,0,4,0" />
                                         <Button Grid.Column="1" Style="{StaticResource ToolbarButton}" Command="{Binding CheckApiHealthCommand}" Content="Check API" Margin="4,0,0,0" />
@@ -473,20 +608,23 @@
                         </StackPanel>
                     </ScrollViewer>
 
-                    <Border Grid.Row="2" Background="#10161F" CornerRadius="9" Padding="10" Margin="0,12,0,0" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Border Grid.Row="2" Background="{StaticResource EditorBackground}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="10" Padding="11" Margin="0,14,0,0" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <Grid>
-                            <TextBlock Text="Processing…" Foreground="{StaticResource Accent}" FontSize="11" VerticalAlignment="Center" />
-                            <Button Style="{StaticResource ToolbarButton}" Command="{Binding CancelProcessingCommand}" Content="Cancel" HorizontalAlignment="Right" Padding="8,4" />
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="7" Height="7" Fill="{StaticResource Accent}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBlock Text="Processing preview…" Foreground="{StaticResource Accent}" FontSize="11" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <Button Style="{StaticResource ToolbarButton}" Command="{Binding CancelProcessingCommand}" Content="Cancel" HorizontalAlignment="Right" Padding="9,4" />
                         </Grid>
                     </Border>
                 </Grid>
             </Border>
         </Grid>
 
-        <Border Grid.Row="2" Background="#111821" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="16,0">
+        <Border Grid.Row="2" Background="{StaticResource TitleBarBackground}" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="18,0">
             <Grid>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Timeline" Foreground="{StaticResource TextSecondary}" FontSize="10" FontWeight="SemiBold" />
+                    <TextBlock Text="EDIT TIMELINE" Foreground="{StaticResource Accent}" FontSize="10" FontWeight="Bold" />
                     <TextBlock Text="  •  " Foreground="{StaticResource TextMuted}" FontSize="10" />
                     <TextBlock Text="{Binding HistoryPositionText}" Foreground="{StaticResource TextPrimary}" FontSize="10" />
                 </StackPanel>
@@ -495,7 +633,7 @@
                     <Button Style="{StaticResource ToolbarButton}" Command="{Binding ResetComparisonCommand}" Content="50 / 50" Padding="9,4" />
                     <Button Style="{StaticResource ToolbarButton}" Command="{Binding NextEditCommand}" Content="Next" IsEnabled="{Binding CanGoNext}" Padding="9,4" />
                 </StackPanel>
-                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Text="Original preserved  •  Every action is incremental" Foreground="{StaticResource TextMuted}" FontSize="10" />
+                <TextBlock x:Name="FooterHint" HorizontalAlignment="Right" VerticalAlignment="Center" Text="Original preserved  •  Every action is incremental" Foreground="{StaticResource TextMuted}" FontSize="10" />
             </Grid>
         </Border>
     </Grid>

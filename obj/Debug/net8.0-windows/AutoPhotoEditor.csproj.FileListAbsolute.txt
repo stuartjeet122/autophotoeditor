@@ -60,3 +60,34 @@ C:\Users\stuart\Desktop\image enhancer\AutoPhotoEditor\obj\Debug\net8.0-windows\
 C:\Users\stuart\Desktop\image enhancer\AutoPhotoEditor\obj\Debug\net8.0-windows\AutoPhotoEditor.pdb
 C:\Users\stuart\Desktop\image enhancer\AutoPhotoEditor\obj\Debug\net8.0-windows\AutoPhotoEditor.genruntimeconfig.cache
 C:\Users\stuart\Desktop\image enhancer\AutoPhotoEditor\obj\Debug\net8.0-windows\ref\AutoPhotoEditor.dll
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\AutoPhotoEditor.csproj.AssemblyReference.cache
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\MainWindow.baml
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\Themes\Dark.baml
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\Themes\Light.baml
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\MainWindow.g.cs
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\App.g.cs
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\AutoPhotoEditor_MarkupCompile.cache
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\AutoPhotoEditor_MarkupCompile.lref
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\AutoPhotoEditor.dll
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\refint\AutoPhotoEditor.dll
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\AutoPhotoEditor.pdb
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\bin\Debug\net8.0-windows\AutoPhotoEditor.exe
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\bin\Debug\net8.0-windows\AutoPhotoEditor.deps.json
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\bin\Debug\net8.0-windows\AutoPhotoEditor.runtimeconfig.json
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\bin\Debug\net8.0-windows\AutoPhotoEditor.dll
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\bin\Debug\net8.0-windows\AutoPhotoEditor.pdb
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\bin\Debug\net8.0-windows\CommunityToolkit.Mvvm.dll
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\bin\Debug\net8.0-windows\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\bin\Debug\net8.0-windows\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\bin\Debug\net8.0-windows\Wpf.Ui.dll
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\bin\Debug\net8.0-windows\Wpf.Ui.Abstractions.dll
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\App.baml
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\AutoPhotoEditor.g.resources
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\AutoPhotoEditor.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\AutoPhotoEditor.AssemblyInfoInputs.cache
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\AutoPhotoEditor.AssemblyInfo.cs
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\AutoPhotoEditor.csproj.CoreCompileInputs.cache
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\AutoPhotoEditor.sourcelink.json
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\AutoPhot.18542B1F.Up2Date
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\AutoPhotoEditor.genruntimeconfig.cache
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\ref\AutoPhotoEditor.dll

@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-C:\Users\stuart\Desktop\image enhancer\AutoPhotoEditor\obj\Debug\net8.0-windows\
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\obj\Debug\net8.0-windows\
 AutoPhotoEditor
 none
 false
-TRACE;DEBUG;NET;NET8_0;NETCOREAPP
-C:\Users\stuart\Desktop\image enhancer\AutoPhotoEditor\App.xaml
-11407045341
+TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP1_0_OR_GREATER;NETCOREAPP1_1_OR_GREATER;NETCOREAPP2_0_OR_GREATER;NETCOREAPP2_1_OR_GREATER;NETCOREAPP2_2_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
+C:\Users\Sjeetoo\Desktop\Gitlab\autophotoeditor\App.xaml
+3-1580949403
 
-192030846819
-229771520692
-MainWindow.xaml;
+231503598435
+2031652056353
+MainWindow.xaml;Themes\Dark.xaml;Themes\Light.xaml;
 
 False
 
