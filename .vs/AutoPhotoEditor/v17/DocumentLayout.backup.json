@@ -104,7 +104,7 @@
               "RelativeDocumentMoniker": "ViewModels\\MainViewModel.cs",
               "ToolTip": "C:\\Users\\stuart\\Desktop\\image enhancer\\AutoPhotoEditor\\ViewModels\\MainViewModel.cs",
               "RelativeToolTip": "ViewModels\\MainViewModel.cs",
-              "ViewState": "AgIAAG0EAAAAAAAAAAAEwH8EAAAfAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-15T16:56:16.872Z",
               "EditorCaption": ""
@@ -119,8 +119,7 @@
               "RelativeToolTip": "MainWindow.xaml.cs",
               "ViewState": "AgIAAB8AAAAAAAAAAAAkwDoAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-15T18:30:49.825Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-15T18:30:49.825Z"
             },
             {
               "$type": "Document",
@@ -191,8 +190,7 @@
               "RelativeToolTip": "Api\\AutoPhotoEditorApiClient.cs",
               "ViewState": "AgIAAP4BAAAAAAAAAAAswBcCAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-15T16:49:00.644Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-15T16:49:00.644Z"
             },
             {
               "$type": "Document",

@@ -850,7 +850,7 @@ public sealed class AutoPhotoEditorApiClient
     // AUTO ENHANCE DATA
     // ========================================================================
 
-    public async Task<AutoEnhanceDataResult> AutoEnhanceDataAsync(
+    public async Task<AutoEnhanceDataResult> ExtractImageDataAsync(
         byte[] imageBytes,
         string jobId,
         Action<ApiJobEvent>? progress = null,
@@ -1104,7 +1104,7 @@ public sealed class AutoPhotoEditorApiClient
         }
     }
 
-    public async Task<AutoEnhanceDataResult> AutoEnhanceDataAsync(
+    public async Task<AutoEnhanceDataResult> ExtractImageDataAsync(
         string imagePath,
         Action<ApiJobEvent>? progress = null,
         CancellationToken cancellationToken = default)

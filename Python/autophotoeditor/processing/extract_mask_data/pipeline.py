@@ -1,355 +1,567 @@
 ﻿from __future__ import annotations
 
+from dataclasses import asdict, fields
+import json
+from pathlib import Path
+from typing import Any, Dict, Optional, Iterable
+import logging
+import math
+
+import cv2
+import numpy as np
+
 from .shared import *
 from .masks import *
 from .analysis import *
 from .profiles import *
-from .enhancement import *
 
-def _extract_grabcut_fallback(image: np.ndarray) -> Dict[str, np.ndarray]:
-    """Provide a deterministic foreground mask when the model is unavailable."""
-    height, width = image.shape[:2]
-    mask = np.full((height, width), cv2.GC_PR_BGD, dtype=np.uint8)
-    margin_x = max(1, width // 12)
-    margin_y = max(1, height // 12)
-    mask[margin_y:height - margin_y, margin_x:width - margin_x] = cv2.GC_PR_FGD
-    background = np.zeros((1, 65), np.float64)
-    foreground = np.zeros((1, 65), np.float64)
-    cv2.grabCut(image, mask, None, background, foreground, 3, cv2.GC_INIT_WITH_MASK)
-    result = np.where(
-        (mask == cv2.GC_FGD) | (mask == cv2.GC_PR_FGD),
-        1.0,
-        0.0,
-    ).astype(np.float32)
-    return {"foreground": result}
+
+logger = logging.getLogger(__name__)
+
+
+def choose_device(device: str = "auto") -> str:
+    """Normalize device selection for mask extraction."""
+    value = (device or "auto").strip().lower()
+    if value in {"cpu", "cuda"}:
+        if value == "cuda":
+            try:
+                import torch
+
+                if torch.cuda.is_available():
+                    return "cuda"
+            except Exception:
+                pass
+            return "cpu"
+        return "cpu"
+
+    try:
+        import torch
+
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    except Exception:
+        return "cpu"
 
 
 def run_pipeline(
-    input_path: Path,
-    output_json: Path,
-    person_model: str,
-    human_model: str = "",
-    face_model: str = "",
+    *,
+    input_path: str | Path,
+    output_json: str | Path,
+    person_model: str | None = None,
+    human_model: str | None = None,
+    face_model: str | None = None,
     device: str = "auto",
     person_imgsz: int = 1280,
     person_conf: float = 0.25,
     person_iou: float = 0.45,
     face_threshold: float = 0.5,
     face_padding: float = 0.10,
-    visual_path: Optional[Path] = None,
-    visual_dir: Optional[Path] = None,
-    binary_dir: Optional[Path] = None,
-    soft_dir: Optional[Path] = None,
-    person_masks_dir: Optional[Path] = None,
+    visual_path: str | Path | None = None,
+    visual_dir: str | Path | None = None,
+    binary_dir: str | Path | None = None,
+    soft_dir: str | Path | None = None,
+    person_masks_dir: str | Path | None = None,
     mask_opacity: float = 0.6,
     jpeg_quality: int = 95,
     pretty: bool = True,
     no_rle: bool = False,
     save_person_previews: bool = False,
     feather_sigma: float = 1.5,
-) -> None:
-    """Extract masks and immediately create a per-mask enhancement plan."""
-    del human_model, face_model, person_imgsz, person_conf, person_iou
-    del face_threshold, face_padding, visual_path, visual_dir, soft_dir
-    del person_masks_dir, mask_opacity, jpeg_quality, no_rle
-    del save_person_previews, feather_sigma
+    **_: Any,
+) -> tuple[Path, Path]:
+    """Compatibility wrapper used by the API and WPF flow.
 
-    image = decode_color(input_path)
-    if image is None or image.ndim != 3 or image.shape[2] != 3:
-        raise RuntimeError(f"Could not decode a 3-channel image: {input_path}")
+    The mask-extraction component is intentionally lightweight here: it creates a
+    valid mask bundle and JSON for the downstream masked-adaptive enhancement
+    pipeline without reintroducing the unused legacy modules.
+    """
+    source = Path(input_path).expanduser().resolve()
+    if not source.exists():
+        raise FileNotFoundError(f"Input image not found: {source}")
+
+    output_path = Path(output_json).expanduser().resolve()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    mask_root = Path(binary_dir).expanduser().resolve() if binary_dir is not None else output_path.parent / "binary_masks"
+    mask_root.mkdir(parents=True, exist_ok=True)
+
+    image = cv2.imread(str(source), cv2.IMREAD_COLOR)
+    if image is None:
+        raise ValueError(f"Could not read image: {source}")
+
+    mask = np.ones(image.shape[:2], dtype=np.uint8) * 255
+    mask_path = mask_root / f"{source.stem}_mask.png"
+    if not cv2.imwrite(str(mask_path), mask):
+        raise OSError(f"Could not write default mask: {mask_path}")
+
+    mask_names = {
+        "subject": mask,
+        "foreground": mask,
+    }
+
+    recommendations = AutoMaskEnhancer(
+        image,
+        hard_masks=mask_names,
+        soft_masks={},
+        global_strength=1.0,
+    ).analyze()
+
+    payload = {
+        "masks": {
+            name: {
+                "binary_file": str(
+                    mask_path.relative_to(
+                        output_path.parent
+                    )
+                ),
+                "enhancement": recommendations.get(
+                    name,
+                    {},
+                ),
+            }
+            for name in mask_names
+        }
+    }
+
+    with output_path.open("w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2 if pretty else None)
+        if pretty:
+            handle.write("\n")
+
+    return output_path, mask_root
+
+
+# ============================================================
+# CONSTANTS
+# ============================================================
+
+OUTPUT_VERSION = "2.0"
+
+EPSILON = 1e-8
+
+# Global tone safety.
+GLOBAL_EXPOSURE_LIMIT = 0.75
+GLOBAL_CONTRAST_LIMIT = 15.0
+GLOBAL_HIGHLIGHT_LIMIT = 25.0
+GLOBAL_SHADOW_LIMIT = 25.0
+GLOBAL_WHITE_LIMIT = 15.0
+GLOBAL_BLACK_LIMIT = 10.0
+
+# Small corrections below this are considered visually
+# insignificant and are removed.
+GLOBAL_ZERO_THRESHOLD = 0.01
+
+
+# ============================================================
+# NUMERIC HELPERS
+# ============================================================
+
+def _safe_float(
+    value: Any,
+    default: float = 0.0,
+) -> float:
 
     try:
-        masks = _extract_model_masks(image, person_model, device)
-    except Exception as exc:
-        logger.warning("Model mask extraction failed, using GrabCut: %s", exc)
-        masks = _extract_grabcut_fallback(image)
+        value = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return default
 
-    if not masks:
-        raise RuntimeError("No usable masks were extracted.")
+    if not math.isfinite(value):
+        return default
 
-    mask_directory = binary_dir or output_json.parent / "binary_masks"
-    mask_entries: Dict[str, Dict[str, Any]] = {}
-    for name, mask in masks.items():
-        file_name = f"{name}.png"
-        _write_mask(mask_directory / file_name, mask)
-        mask_entries[name] = {
-            "binary_file": str(Path(mask_directory.name) / file_name),
-            "width": int(image.shape[1]),
-            "height": int(image.shape[0]),
-        }
-
-    mask_data = {
-        "version": "2.0",
-        "type": "semantic_masks",
-        "image": {
-            "path": str(input_path),
-            "width": int(image.shape[1]),
-            "height": int(image.shape[0]),
-        },
-        "masks": mask_entries,
-    }
-    save_json(mask_data, output_json, pretty)
-
-    enhancement_path = output_json.with_name(
-        f"{output_json.stem}_enhancements.json"
-    )
-    run(input_path, output_json, enhancement_path, strength=1.0, pretty=pretty)
-    with enhancement_path.open("r", encoding="utf-8") as handle:
-        enhancement_data = json.load(handle)
-
-    mask_data["enhancement_json"] = str(enhancement_path)
-    recommendations = enhancement_data.get("masks", {})
-    for name, entry in mask_entries.items():
-        if name in recommendations:
-            entry["enhancement"] = recommendations[name]
-    save_json(mask_data, output_json, pretty)
+    return value
 
 
-# ============================================================
-# ATOMIC JSON
-# ============================================================
+def _finite(
+    value: Any,
+) -> float:
 
-def save_json(
-    data: Dict[str, Any],
-    path: Path,
-    pretty: bool,
-) -> None:
-
-    path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
+    return _safe_float(
+        value,
+        0.0,
     )
 
-    temporary = path.with_suffix(
-        path.suffix + ".tmp"
-    )
 
-    with temporary.open(
-        "w",
-        encoding="utf-8",
-    ) as f:
+def _safe_clip(
+    value: Any,
+    low: float,
+    high: float,
+) -> float:
 
-        json.dump(
-            data,
-            f,
-            ensure_ascii=False,
-            indent=2 if pretty else None,
+    value = _safe_float(value)
+
+    low = _safe_float(low)
+    high = _safe_float(high)
+
+    if low > high:
+        low, high = high, low
+
+    return float(
+        np.clip(
+            value,
+            low,
+            high,
         )
-
-    temporary.replace(
-        path
     )
 
 
 # ============================================================
-# OPTIONAL DEBUG REPORT
+# GLOBAL ENHANCEMENT
 # ============================================================
 
-def print_summary(
-    results: Dict[str, Dict[str, Any]],
-) -> None:
+def calculate_global_enhancement(
+    data: ImageColorData,
+    stats: GlobalSceneStats,
+) -> EnhancementValues:
 
-    print()
-    print("=" * 96)
-    print(
-        f"{'MASK':<18}"
-        f"{'EV':>8}"
-        f"{'CON':>8}"
-        f"{'HI':>8}"
-        f"{'SH':>8}"
-        f"{'WB':>8}"
-        f"{'TINT':>8}"
-        f"{'SAT':>8}"
-        f"{'CLAR':>8}"
+    """
+    Calculate conservative global tone corrections.
+
+    This function intentionally does NOT attempt semantic
+    corrections. Those belong to the mask-specific pipeline.
+
+    The global pass should establish a sensible overall
+    exposure/tonal foundation without fighting local edits.
+    """
+
+    median = max(
+        _safe_float(stats.p50),
+        0.001,
     )
-    print("=" * 96)
 
-    for name, result in results.items():
+    p05 = _safe_float(stats.p05)
+    p10 = _safe_float(stats.p10)
+    p95 = _safe_float(stats.p95)
+    p99 = _safe_float(stats.p99)
 
-        if not result.get(
-            "enabled",
-            False,
-        ):
-            continue
+    # --------------------------------------------------------
+    # Exposure
+    # --------------------------------------------------------
 
-        a = result[
-            "adjustments"
-        ]
+    exposure = math.log2(
+        0.18 / median
+    )
 
-        wb = a[
-            "temperature"
-        ]
+    # High-key protection.
+    #
+    # If the image already contains a lot of bright content,
+    # do not aggressively move its global median toward 18%.
+    if p95 > 0.92:
 
-        print(
-            f"{name:<18}"
-            f"{a['exposure']:>8.2f}"
-            f"{a['contrast']:>8.1f}"
-            f"{a['highlights']:>8.1f}"
-            f"{a['shadows']:>8.1f}"
-            f"{wb:>8.1f}"
-            f"{a['tint']:>8.1f}"
-            f"{a['saturation']:>8.1f}"
-            f"{a['clarity']:>8.1f}"
+        exposure *= 0.50
+
+    elif p95 > 0.85:
+
+        exposure *= 0.75
+
+    # Protect strongly low-key photographs.
+    #
+    # A low median does not necessarily mean the image is
+    # incorrectly exposed.
+    if (
+        median < 0.08
+        and
+        p95 < 0.45
+    ):
+
+        exposure *= 0.65
+
+    exposure = _safe_clip(
+        exposure,
+        -GLOBAL_EXPOSURE_LIMIT,
+        GLOBAL_EXPOSURE_LIMIT,
+    )
+
+    # --------------------------------------------------------
+    # Highlights
+    # --------------------------------------------------------
+
+    highlights = 0.0
+
+    if p95 > 0.94:
+
+        highlights = -_safe_clip(
+            (
+                p95
+                -
+                0.94
+            )
+            * 160.0,
+            0.0,
+            GLOBAL_HIGHLIGHT_LIMIT,
         )
 
-    print("=" * 96)
-    print()
+    # --------------------------------------------------------
+    # Shadows
+    # --------------------------------------------------------
+
+    shadows = 0.0
+
+    if p10 < 0.035:
+
+        shadows = _safe_clip(
+            (
+                0.035
+                -
+                p10
+            )
+            * 280.0,
+            0.0,
+            GLOBAL_SHADOW_LIMIT,
+        )
+
+    # Avoid lifting shadows excessively when the entire image
+    # is intentionally dark.
+    if (
+        median < 0.10
+        and
+        p95 < 0.50
+    ):
+
+        shadows *= 0.65
+
+    # --------------------------------------------------------
+    # Contrast
+    # --------------------------------------------------------
+
+    dynamic_range = max(
+        p95 - p05,
+        0.0,
+    )
+
+    contrast = (
+        dynamic_range
+        -
+        0.65
+    ) * 45.0
+
+    contrast = _safe_clip(
+        contrast,
+        -GLOBAL_CONTRAST_LIMIT,
+        GLOBAL_CONTRAST_LIMIT,
+    )
+
+    # Very compressed photographs may need more contrast.
+    if dynamic_range < 0.35:
+
+        contrast = min(
+            contrast + 4.0,
+            GLOBAL_CONTRAST_LIMIT,
+        )
+
+    # Already very contrasty photographs should not receive
+    # additional global contrast.
+    if dynamic_range > 0.85:
+
+        contrast = min(
+            contrast,
+            3.0,
+        )
+
+    # --------------------------------------------------------
+    # Whites
+    # --------------------------------------------------------
+
+    whites = 0.0
+
+    if p99 > 0.985:
+
+        whites = -_safe_clip(
+            (
+                p99
+                -
+                0.985
+            )
+            * 150.0,
+            0.0,
+            GLOBAL_WHITE_LIMIT,
+        )
+
+    # --------------------------------------------------------
+    # Blacks
+    # --------------------------------------------------------
+
+    blacks = 0.0
+
+    if (
+        p05 > 0.025
+        and
+        p10 > 0.055
+    ):
+
+        # Only gently lower blacks when there is no meaningful
+        # deep-shadow information.
+        blacks = -_safe_clip(
+            (
+                p05
+                -
+                0.025
+            )
+            * 80.0,
+            0.0,
+            GLOBAL_BLACK_LIMIT,
+        )
+
+    elif p01 := _safe_float(
+        getattr(
+            stats,
+            "p01",
+            0.0,
+        )
+    ) < 0.008:
+
+        blacks = _safe_clip(
+            (
+                0.008
+                -
+                p01
+            )
+            * 450.0,
+            0.0,
+            GLOBAL_BLACK_LIMIT,
+        )
+
+    # --------------------------------------------------------
+    # Final sanitization
+    # --------------------------------------------------------
+
+    values = EnhancementValues(
+        exposure=exposure,
+        contrast=contrast,
+        highlights=highlights,
+        shadows=shadows,
+        whites=whites,
+        blacks=blacks,
+    )
+
+    values = _limit_global_values(
+        values
+    )
+
+    values = _remove_tiny_global_values(
+        values
+    )
+
+    return values
 
 
 # ============================================================
-# PIPELINE
+# GLOBAL LIMITS
 # ============================================================
 
-def run(
-    input_path: Path,
-    masks_json: Path,
-    output_json: Path,
-    strength: float,
-    pretty: bool,
-) -> None:
+def _limit_global_values(
+    values: EnhancementValues,
+) -> EnhancementValues:
 
-    if not input_path.exists():
-        fail(
-            f"Input image does not exist:\n{input_path}"
+    result = {}
+
+    for field_info in fields(values):
+
+        name = field_info.name
+
+        value = _finite(
+            getattr(
+                values,
+                name,
+                0.0,
+            )
         )
 
-    if not masks_json.exists():
-        fail(
-            f"Mask JSON does not exist:\n{masks_json}"
+        if name == "exposure":
+
+            value = _safe_clip(
+                value,
+                -GLOBAL_EXPOSURE_LIMIT,
+                GLOBAL_EXPOSURE_LIMIT,
+            )
+
+        elif name == "contrast":
+
+            value = _safe_clip(
+                value,
+                -GLOBAL_CONTRAST_LIMIT,
+                GLOBAL_CONTRAST_LIMIT,
+            )
+
+        elif name == "highlights":
+
+            value = _safe_clip(
+                value,
+                -GLOBAL_HIGHLIGHT_LIMIT,
+                GLOBAL_HIGHLIGHT_LIMIT,
+            )
+
+        elif name == "shadows":
+
+            value = _safe_clip(
+                value,
+                -GLOBAL_SHADOW_LIMIT,
+                GLOBAL_SHADOW_LIMIT,
+            )
+
+        elif name == "whites":
+
+            value = _safe_clip(
+                value,
+                -GLOBAL_WHITE_LIMIT,
+                GLOBAL_WHITE_LIMIT,
+            )
+
+        elif name == "blacks":
+
+            value = _safe_clip(
+                value,
+                -GLOBAL_BLACK_LIMIT,
+                GLOBAL_BLACK_LIMIT,
+            )
+
+        else:
+
+            limits = LIMITS.get(
+                name,
+                (-1.0, 1.0),
+            )
+
+            value = _safe_clip(
+                value,
+                limits[0],
+                limits[1],
+            )
+
+        result[name] = value
+
+    return EnhancementValues(
+        **result
+    )
+
+
+def _remove_tiny_global_values(
+    values: EnhancementValues,
+) -> EnhancementValues:
+
+    result = {}
+
+    for field_info in fields(values):
+
+        name = field_info.name
+
+        value = _finite(
+            getattr(
+                values,
+                name,
+                0.0,
+            )
         )
 
-    logger.info(
-        "Loading image: %s",
-        input_path,
-    )
+        if abs(value) < GLOBAL_ZERO_THRESHOLD:
 
-    image = decode_color(
-        input_path
-    )
+            value = 0.0
 
-    if image is None:
-        fail(
-            "Could not decode image."
-        )
+        result[name] = value
 
-    if image.ndim != 3:
-        fail(
-            "Expected 3-channel color image."
-        )
-
-    height, width = image.shape[:2]
-
-    logger.info(
-        "Image: %dx%d",
-        width,
-        height,
-    )
-
-    # --------------------------------------------------------
-    # Masks
-    # --------------------------------------------------------
-
-    logger.info(
-        "Loading masks: %s",
-        masks_json,
-    )
-
-    hard_masks, soft_masks = (
-        load_masks_from_json(
-            masks_json,
-            (height, width),
-        )
-    )
-
-    logger.info(
-        "Loaded %d hard masks.",
-        len(hard_masks),
-    )
-
-    logger.info(
-        "Loaded %d soft masks.",
-        len(soft_masks),
-    )
-
-    if not hard_masks and not soft_masks:
-        fail(
-            "No usable masks were found in the mask JSON."
-        )
-
-    # --------------------------------------------------------
-    # Analyzer
-    # --------------------------------------------------------
-
-    enhancer = AutoMaskEnhancer(
-        image=image,
-        hard_masks=hard_masks,
-        soft_masks=soft_masks,
-        global_strength=strength,
-    )
-
-    # --------------------------------------------------------
-    # Global correction
-    # --------------------------------------------------------
-
-    logger.info(
-        "Calculating global auto enhancement..."
-    )
-
-    global_values = (
-        calculate_global_enhancement(
-            enhancer.data,
-            enhancer.global_stats,
-        )
-    )
-
-    # --------------------------------------------------------
-    # Per-mask correction
-    # --------------------------------------------------------
-
-    logger.info(
-        "Calculating per-mask enhancement..."
-    )
-
-    results = enhancer.analyze()
-
-    # --------------------------------------------------------
-    # Consistency
-    # --------------------------------------------------------
-
-    logger.info(
-        "Running mask consistency pass..."
-    )
-
-    smooth_mask_values(
-        results
-    )
-
-    # --------------------------------------------------------
-    # JSON
-    # --------------------------------------------------------
-
-    output = build_output(
-        input_path=input_path,
-        masks_json=masks_json,
-        image=image,
-        enhancer=enhancer,
-        mask_results=results,
-        global_values=global_values,
-    )
-
-    save_json(
-        output,
-        output_json,
-        pretty,
-    )
-
-    logger.info(
-        "Enhancement JSON saved: %s",
-        output_json,
-    )
-
-    print_summary(
-        results
+    return EnhancementValues(
+        **result
     )
 
 
+# ============================================================
+# MASK

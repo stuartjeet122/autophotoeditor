@@ -265,7 +265,7 @@ public partial class MainViewModel : ObservableObject
 
     private async Task ApplyManualPreviewAsync(CancellationToken token)
     {
-        string? sourcePath = OriginalImagePath;
+        string? sourcePath = GetCurrentImagePath();
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
             return;
 
@@ -337,7 +337,7 @@ public partial class MainViewModel : ObservableObject
         byte[] imageBytes = await File.ReadAllBytesAsync(apiInputPath, token);
 
         string jobId = Guid.NewGuid().ToString("N");
-        AutoEnhanceDataResult analysisResult = await _api.AutoEnhanceDataAsync(
+        AutoEnhanceDataResult analysisResult = await _api.ExtractImageDataAsync(
             imageBytes,
             jobId,
             cancellationToken: token,
@@ -871,30 +871,19 @@ public partial class MainViewModel : ObservableObject
         {
             string apiInputPath = await PrepareApiInputAsync(imagePath, token);
             byte[] analysisBytes = await File.ReadAllBytesAsync(apiInputPath, token);
-            byte[] maskBytes = await File.ReadAllBytesAsync(imagePath, token);
-
-            Task<AutoEnhanceDataResult> analysisTask = _api.AutoEnhanceDataAsync(
+            Task<AutoEnhanceDataResult> analysisTask = _api.ExtractImageDataAsync(
                 analysisBytes,
                 Guid.NewGuid().ToString("N"),
                 cancellationToken: token,
                 summaryOnly: false);
-            Task<MaskDataResult> maskTask = _api.MaskDataAsync(
-                maskBytes,
-                Guid.NewGuid().ToString("N"),
-                cancellationToken: token,
-                device: MaskDevice);
-
-            await Task.WhenAll(analysisTask, maskTask);
+            await analysisTask;
             token.ThrowIfCancellationRequested();
 
             if (!string.Equals(OriginalImagePath, imagePath, StringComparison.OrdinalIgnoreCase))
                 return;
 
             AutoEnhanceDataResult analysisResult = await analysisTask;
-            MaskDataResult maskResult = await maskTask;
             _analysisJsonForOriginal = analysisResult.AnalysisJson;
-            _maskJsonForOriginal = maskResult.MaskJsonText;
-            UpdateMaskOptions(maskResult.MaskNames, maskResult.MaskBinaryPngBase64);
             StatusMessage = "Image loaded. AI data ready.";
         }
         catch (OperationCanceledException)
@@ -977,7 +966,7 @@ public partial class MainViewModel : ObservableObject
             }
             else
             {
-                var summaryResult = await _api.AutoEnhanceDataAsync(
+                var summaryResult = await _api.ExtractImageDataAsync(
                     imageBytes,
                     Guid.NewGuid().ToString("N"),
                     OnApiProgress,
@@ -990,7 +979,7 @@ public partial class MainViewModel : ObservableObject
                 if (bestEnhancement != null)
                     AutoEnhanceStrength = ClampAutoEnhanceStrength(bestEnhancement.Value.LuminosityRecommendedEv);
 
-                var analysisResult = await _api.AutoEnhanceDataAsync(
+                var analysisResult = await _api.ExtractImageDataAsync(
                     imageBytes,
                     jobId,
                     OnApiProgress,
@@ -1396,8 +1385,7 @@ public partial class MainViewModel : ObservableObject
             settingsJson: settingsJson,
             maskJson: ManualAdjustMask ? maskJson.GetRawText() : null,
             maskNames: selectedMasks,
-            isMaskScoped: ManualAdjustMask,
-            useOriginalImage: true);
+            isMaskScoped: ManualAdjustMask);
     }
 
 
@@ -1595,7 +1583,7 @@ public partial class MainViewModel : ObservableObject
                 jobId;
 
             AutoEnhanceDataResult result =
-                await _api.AutoEnhanceDataAsync(
+                await _api.ExtractImageDataAsync(
                     imageBytes,
                     jobId,
                     OnApiProgress,
